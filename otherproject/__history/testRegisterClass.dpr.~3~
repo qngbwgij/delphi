@@ -1,0 +1,14 @@
+program testRegisterClass;
+
+uses
+  Vcl.Forms,
+  Unit1 in 'Unit1.pas' {FormTestRegisterClass};
+
+{$R *.res}
+
+begin
+  Application.Initialize;
+  Application.MainFormOnTaskbar := True;
+  Application.CreateForm(TFormTestRegisterClass, FormTestRegisterClass);
+  Application.Run;
+end.

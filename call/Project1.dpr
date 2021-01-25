@@ -1,0 +1,16 @@
+program Project1;
+
+uses
+  Vcl.Forms,
+  Unit2 in 'pas\Unit2.pas' {Formoniterwindow},
+  Unit4 in 'pas\Unit4.pas' {Form4};
+
+{$R *.res}
+
+begin
+  Application.Initialize;
+  Application.MainFormOnTaskbar := True;
+  Application.CreateForm(TFormoniterwindow, Formoniterwindow);
+  Application.CreateForm(TForm4, Form4);
+  Application.Run;
+end.
