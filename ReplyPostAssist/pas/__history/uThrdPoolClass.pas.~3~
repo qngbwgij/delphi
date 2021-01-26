@@ -1,0 +1,882 @@
+{*******************************************************}
+{       线程池管理类单元                                }
+{       WZCOMPSRV                                       }
+{                                                       }
+{       版权所有 (C) 2011 WINSZONE                      }
+{                                                       }
+{*******************************************************}
+
+
+unit uThrdPoolClass;
+
+
+
+interface
+
+uses Windows, Classes, SysUtils, //uRiskUtils,//uRiskType,
+   syncobjs;//,uRiskServiceProxy;//, uClass;      //,
+
+type
+  TActionThrd = class;
+  TCustomThreadAction = class;
+
+  TGetNextActionEvent = procedure(p_Thread: TThread; var p_Action: TCustomThreadAction) of object; //加入到闲队列当中
+  TSetIdleEvent = procedure(p_Thread: TThread) of object; //加入到闲队列当中
+  TResumeEvent = procedure(p_Thread: TThread) of object; //线程恢复运行事件
+  TSuspendEvent = procedure(p_Thread: TThread) of object; //线程挂起事件
+
+  {
+  TThreadWatck = class
+  private
+    Flist: Tlist;
+    FcsListChg: TCriticalSection;
+  public
+    constructor create;
+    destructor Destroy; override;
+    procedure reg(AThread: TThread);
+    procedure unreg(AThread: TThread);
+    //procedure GetThreadStatus(Aitems: TStrings);
+    function Count: Integer;
+//    function CallService(const p_sInput: WideString; out p_sOutput: WideString;
+//      out p_iRetCode: Integer; out p_sRetMsg: WideString): WordBool; //服务、函数调用总接口
+  end;
+
+  }
+
+  TCustomThreadAction = class
+  private
+    FActionThread: TActionThrd;
+    FActionCaption: string;
+    FId: Integer;
+    procedure SetActionThread(const Value: TActionThrd);
+    procedure SetActionCaption(const Value: string);
+    procedure SetId(const Value: Integer);
+  public
+    constructor create;
+    destructor destroy; override;
+    procedure Operate; virtual; abstract;
+    property ActionThread: TActionThrd read FActionThread write SetActionThread;
+    property ActionCaption: string read FActionCaption write SetActionCaption;
+    property Id: Integer read FId write SetId;
+  end;
+
+  TActionThrd = class(TThread)
+  private
+    FAction: TCustomThreadAction;
+    FOnGetNextActionEvent: TGetNextActionEvent;
+    FThreadId: Integer;
+    FCaption: string;
+    FOnSetIdle: TSetIdleEvent;
+    FOnResume: TResumeEvent;
+    FOnSuspend: TSuspendEvent;
+    procedure SetOnGetNextActionEvent(const Value: TGetNextActionEvent);
+    procedure SetOnSetIdle(const Value: TSetIdleEvent);
+    procedure SetThreadId(const Value: Integer);
+    procedure SetOnResume(const Value: TResumeEvent);
+    procedure SetOnSuspend(const Value: TSuspendEvent);
+  protected
+    procedure Execute; override;
+    procedure SuspendEx;
+    procedure ResumeEx;
+    procedure GetNextAction;
+    procedure SetIdle;
+  public
+    constructor create(const CreateSuspended: Boolean);
+    destructor Destroy; override;
+  public
+    property OnGetNextActionEvent: TGetNextActionEvent read FOnGetNextActionEvent write SetOnGetNextActionEvent;
+    property OnSetIdle: TSetIdleEvent read FOnSetIdle write SetOnSetIdle;
+    property OnResume: TResumeEvent read FOnResume write SetOnResume;
+    property OnSuspend: TSuspendEvent read FOnSuspend write SetOnSuspend;
+    property Caption: string read FCaption write FCaption;
+    property ThreadId: Integer read FThreadId write SetThreadId;
+  end;
+
+
+  TThreadPoolManage = class(TObject)
+  private
+    fiLastTickCount: Integer;
+    FBldThrdCount: Integer; //建立的线程总数
+    FThreadsActive: Boolean;
+    FShowStatus: Boolean;
+    FPoolType: Integer;
+    FBusyThrdCount: Integer; //繁忙的线程数
+    FIdleThrdCount: Integer; //空闲的线程数
+    FStartExecuteAction: boolean;
+    FActionList: TList;
+    FFirstActionList: TList;
+    FThreadList: TList;
+    FThrdListChg: TCriticalSection;
+    FActionListChg: TCriticalSection;     
+    procedure AddIdleThread(p_Thread: TThread);
+    procedure GetNextAction(p_Thread: TThread; var p_Action: TCustomThreadAction);
+    procedure AddIdleThreadList(AThread: TThread);
+    procedure SetThreadsActive(const Value: Boolean);
+    procedure ThreadTerminate(Sender: TObject);
+    procedure ThreadResume(p_Thread: TThread);
+    procedure ThreadSuspend(p_Thread: TThread);
+    //procedure SendThreadPoolStatus(p_bPerform: Boolean = false);
+    procedure SetShowStatus(const Value: Boolean);
+    procedure SetPoolType(const Value: Integer);
+  protected
+    procedure StartThread(p_iThrdCount: Integer); //启动n个线程
+    procedure ClearThreads;
+    procedure TerminateAllThread;
+    procedure ResumeAllThread;
+    function ThreadsIsFreed: Boolean;
+    function ThreadsIsFinished: Boolean;
+    function ThreadsIsSuspended: Boolean;
+    property ThreadsActive: Boolean read FThreadsActive write SetThreadsActive;
+  public
+    constructor create;
+    destructor Destroy; override;
+  public
+    property PoolType: Integer read FPoolType write SetPoolType;
+  public
+    procedure StartOneThread;
+    procedure BldThreadPool(p_iThrdNum: Integer; sPriority: string = ''); //增加传入参数，设置线程等级
+    procedure StartWork;
+    procedure StopWork;
+    function WaitforThreadsFinished(const SleepTime: integer = 100): Boolean;
+    function WaitforThreadsFinishedWithProcessMsg(const SleepTime: integer = 100): Boolean;
+    function GetActionCount: Integer;
+    procedure AddAction(p_BusiAction: TCustomThreadAction; p_QueueId: Integer = 0);
+
+    procedure ClearActions; 
+    property ShowStatus: Boolean read FShowStatus write SetShowStatus;
+    property PBusyThrdCount: Integer read FBusyThrdCount;
+    property PStartExecuteAction: Boolean read FStartExecuteAction;
+    property PBldThrdCount: Integer read FBldThrdCount;
+  end;
+
+
+type
+  TBusiAction = class(TCustomThreadAction)
+  end;
+
+  TInstActionProxy = class(TThreadPoolManage)
+  end;
+
+//var
+ // _ThreadWatck: TThreadWatck;
+
+//function ThreadWatck: TThreadWatck;
+
+implementation
+
+uses Forms;
+{
+function ThreadWatck: TThreadWatck;
+begin
+  if _ThreadWatck = nil then
+    _ThreadWatck := TThreadWatck.create;
+  Result := _ThreadWatck;
+end;
+}
+
+
+
+{ TCustomThreadAction }
+
+constructor TCustomThreadAction.create;
+begin
+
+end;
+
+destructor TCustomThreadAction.destroy;
+begin
+  inherited;
+//  WZInterface.debug.SaveLog(WorkCaption + '--[Action'+ IntToStr(Id) +']Free');
+end;
+
+procedure TCustomThreadAction.SetActionCaption(const Value: string);
+begin
+  FActionCaption := Value;
+end;
+
+procedure TCustomThreadAction.SetActionThread(const Value: TActionThrd);
+begin
+  FActionThread := Value;
+end;
+
+procedure TCustomThreadAction.SetId(const Value: Integer);
+begin
+  FId := Value;
+end;
+
+
+
+{ TThreadWatck }
+{
+function TThreadWatck.CallService(const p_sInput: WideString;
+  out p_sOutput: WideString; out p_iRetCode: Integer;
+  out p_sRetMsg: WideString): WordBool;
+var
+  sServiceId: string;
+  Aitems: TStrings;
+begin
+  result := False;
+  sServiceId := StrFields.fieldbyname(p_sInput,'ServiceId').AsString;
+  if sServiceId = 'GetThreadStatus' then
+  begin
+    Aitems := TStringList.Create;
+    try
+      GetThreadStatus(Aitems);
+      p_sOutput := Aitems.Text;
+    finally
+      Aitems.free;
+    end;
+  end;
+end;
+}
+{
+function TThreadWatck.Count: Integer;
+begin
+  Result := Flist.Count;
+end;
+
+constructor TThreadWatck.create;
+begin
+  Flist := TList.Create;
+  FcsListChg := TCriticalSection.create;
+end;
+
+
+destructor TThreadWatck.Destroy;
+begin
+  Flist.Free;
+  FcsListChg.Free;
+  inherited;
+end;
+{
+procedure TThreadWatck.GetThreadStatus(Aitems: TStrings);
+var
+  i: Integer;
+  ThreadID: string;
+  ActThread: TActionThrd;
+  iThreadStatus: Integer;
+//  ThreadStatus: string;
+begin
+  for i := 0 to Flist.Count - 1 do
+  begin
+    ThreadID := IntToStr(TActionThrd(Flist.Items[i]).ThreadId);
+    ActThread := TActionThrd(Flist.Items[i]);
+    iThreadStatus :=  CheckThreadFreed(TActionThrd(Flist.Items[i]));
+    case iThreadStatus of
+      1:
+        begin
+          if ActThread.Suspended then
+            Aitems.Values[ThreadID] := ActThread.Caption + ':空闲状态'
+          else
+            Aitems.Values[ThreadID] := ActThread.Caption + ':正在运行'
+        end;
+      2:
+        begin
+          Aitems.Values[ThreadID] := TActionThrd(Flist.Items[i]).Caption + ':已经停用';
+        end;
+      3:
+        Aitems.Values[ThreadID] := ':线程已释放';
+    else
+      Aitems.Values[ThreadID] := TActionThrd(Flist.Items[i]).Caption + ':线程出错';
+    end;
+  end;
+end;
+
+}
+{
+procedure TThreadWatck.reg(AThread: TThread);
+begin
+  FcsListChg.Enter;
+  try
+    Flist.Add(AThread);
+  finally
+    FcsListChg.Leave;
+  end;
+end;
+
+procedure TThreadWatck.unreg(AThread: TThread);
+var
+  iIndex: Integer;
+begin
+  FcsListChg.Enter;
+  try
+    iIndex := Flist.IndexOf(AThread);
+    if iIndex > -1 then
+      Flist.Delete(iIndex);
+  finally
+    FcsListChg.Leave;
+  end;
+end;
+
+{ TActionThrd }
+
+constructor TActionThrd.create(const CreateSuspended: Boolean);
+begin
+//  FcsSetAction := TCriticalSection.create;
+  //ThreadWatck.reg(Self);
+  inherited create(CreateSuspended);
+end;
+
+destructor TActionThrd.Destroy;
+begin
+  inherited;                  
+//  FcsSetAction.Free;
+  //ThreadWatck.unreg(self);
+end;
+
+procedure TActionThrd.Execute;
+begin
+  while not Terminated do
+  begin
+    if FAction = nil then
+      GetNextAction;
+
+    if FAction = nil then
+    begin
+      if Terminated then Break;
+
+      //Suspend预处理
+      SetIdle; //取不到后续动作，则进入空闲线程队列
+      SuspendEx;
+    end
+    else begin
+      if Terminated then Break;
+      try
+        try
+          FAction.Operate;
+        finally
+          FAction.Free;
+          FAction := nil;
+        end;
+      except
+        on e: Exception do
+        begin
+          if Terminated then
+            Break;
+//          SendExceptMsg('异常:'+e.message + '(TActionThrd.Execute)');
+        end;
+      end;
+      if Terminated then Break;
+    end
+  end;
+//  SendFormMsg('线程结束:' + IntToStr(Integer(Threadid)), 8);
+end;
+
+procedure TActionThrd.GetNextAction;
+begin
+  if Assigned(FOnGetNextActionEvent) then
+    FOnGetNextActionEvent(Self, FAction);
+end;
+
+procedure TActionThrd.ResumeEx;
+begin
+  if Assigned(OnResume) then OnResume(self);
+  inherited Resume;
+end;
+
+procedure TActionThrd.SetIdle;
+begin
+  if Assigned(FOnSetIdle) then FOnSetIdle(self);
+end;
+
+procedure TActionThrd.SetOnGetNextActionEvent(
+  const Value: TGetNextActionEvent);
+begin
+  FOnGetNextActionEvent := Value;
+end;
+
+procedure TActionThrd.SetOnResume(const Value: TResumeEvent);
+begin
+  FOnResume := Value;
+end;
+
+procedure TActionThrd.SetOnSetIdle(const Value: TSetIdleEvent);
+begin
+  FOnSetIdle := Value;
+end;
+
+procedure TActionThrd.SetOnSuspend(const Value: TSuspendEvent);
+begin
+  FOnSuspend := Value;
+end;
+
+procedure TActionThrd.SetThreadId(const Value: Integer);
+begin
+  FThreadId := Value;
+end;
+
+procedure TActionThrd.SuspendEx;
+begin
+  if Assigned(OnSuspend) then OnSuspend(self);
+  inherited Suspend;
+end;
+
+{ TThreadPoolManage }
+
+{-------------------------------------------------------------------------------
+  过程名:    TThreadPoolManage.AddAction
+  作者:      Administrator
+  日期:      2011.04.01
+  参数:      p_BusiAction: TCustomThreadAction;       -动作对象
+             p_QueueId: Integer = 0                   -动作优先级（0=普通； 非0=优先）
+  返回值:    无
+  功能：     添加动作并启动线程响应
+-------------------------------------------------------------------------------}
+procedure TThreadPoolManage.AddAction(p_BusiAction: TCustomThreadAction; p_QueueId: Integer = 0);
+begin
+  if not ThreadsActive then Exit; //如果线程池已经去活，不让加action
+  FActionListChg.Enter;
+  try
+    if p_QueueId = 0 then
+      FActionList.Add(p_BusiAction)
+    else
+      FFirstActionList.Add(p_BusiAction);
+    //SendThreadPoolStatus;
+//    ServiceProxy.CallService('ServiceId=TfmRiskServer.ShowRunStatus;MsgType=0;Count=' + IntToStr(FActionList.count + FFirstActionList.Count));
+  finally
+    FActionListChg.Leave;
+  end;
+
+  //为确保工作列表每个工作都有响应，家加入的action的时候要启动一个线程响应服务
+  //如果没有空闲的线程，标明所有线程都在运作，则不需要启动线程
+  //这个线程启动后，可能被其他线程抢去了action，就会继续挂起
+
+  StartThread(1);
+end;
+
+
+procedure TThreadPoolManage.AddIdleThread(p_Thread: TThread);
+begin
+  if p_Thread = nil then exit;
+  AddIdleThreadList(p_Thread);
+end;
+
+procedure TThreadPoolManage.AddIdleThreadList(AThread: TThread);
+var
+  iIndex: Integer;
+begin
+  FThrdListChg.Enter;
+  try
+    iIndex := FThreadList.IndexOf(AThread);
+    FThreadList.Move(iIndex, 0); //使排到最首
+  finally
+    FThrdListChg.Leave;
+  end;
+
+  //SendThreadPoolStatus(True);
+end;
+
+{-------------------------------------------------------------------------------
+  过程名:    TThreadPoolManage.BldThreadPool
+  作者:      Administrator
+  日期:      2011.04.01
+  参数:      p_iThrdNum: Integer;     -线程数
+             sPriority: string = ''   -优先级
+  返回值:    无
+  功能：构建线程池（初始化线程队列）
+-------------------------------------------------------------------------------}
+procedure TThreadPoolManage.BldThreadPool(p_iThrdNum: Integer; sPriority: string = '');
+var
+  AActionThread: TActionThrd;
+  i: Integer;
+begin
+  FThrdListChg.Enter;
+  try
+    for i := 0 to p_iThrdNum - 1 do
+    begin
+      AActionThread := TActionThrd.Create(true);
+      AActionThread.FreeOnTerminate := True;
+      if sPriority = 'tpLower' then
+        AActionThread.Priority := tpLower;
+      AActionThread.OnGetNextActionEvent := GetNextAction; //线程从action列表中获取action
+      AActionThread.OnSetIdle := AddIdleThread; //如果线程挂起，就把自己放入空闲列表
+      AActionThread.OnResume := ThreadResume;
+      AActionThread.OnSuspend := ThreadSuspend;
+      AActionThread.OnTerminate := ThreadTerminate; //每个线程结束后从线程列表中删除自己
+      FThreadList.Add(AActionThread);
+    end;
+    FBldThrdCount := p_iThrdNum;
+    FIdleThrdCount := FBldThrdCount;
+  finally
+    FThrdListChg.Leave;
+    //SendThreadPoolStatus(True);
+  end;
+end;
+
+{-------------------------------------------------------------------------------
+  过程名:    TThreadPoolManage.ClearActions
+  作者:      Administrator
+  日期:      2011.04.01
+  参数:      无
+  返回值:    无
+  功能 ： 清理动作队列中所有action
+-------------------------------------------------------------------------------}
+procedure TThreadPoolManage.ClearActions;
+var
+  CustomThreadAction : TCustomThreadAction;
+begin
+  FActionListChg.Enter;
+  try
+    while FFirstActionList.Count > 0 do
+    begin
+      TCustomThreadAction(FFirstActionList[0]).Free; //删除前释放 20100613 lzm
+      FFirstActionList.Delete(0);
+    end;
+
+    while FActionList.Count > 0 do
+    begin
+      CustomThreadAction := FActionList[0];
+      CustomThreadAction.free;
+//      TCustomThreadAction(FActionList[0]).Free; //删除前释放 20100613 lzm
+      FActionList.Delete(0);
+    end;
+
+  finally
+    FActionListChg.Leave;
+  end;
+  //SendThreadPoolStatus(True);
+end;
+
+
+procedure TThreadPoolManage.ClearThreads;
+begin
+  TerminateAllThread; //先终止所有线程 并等待终止完成
+  while FBldThrdCount > 0 do
+  begin
+    Application.ProcessMessages; //给系统时间片，主要为响应异步函数,否则线程和主进程之间没有通讯的机会
+    Sleep(100); //给线程时间片
+  end;
+  //SendThreadPoolStatus(True);
+end;
+
+
+constructor TThreadPoolManage.create;
+begin
+  inherited;
+  FStartExecuteAction := false;
+  FFirstActionList := TList.Create;
+  FActionList := TList.Create;
+  FThreadList := TList.Create;
+  FThrdListChg := TCriticalSection.Create;
+  FActionListChg := TCriticalSection.Create;
+  ThreadsActive := false;
+  ShowStatus := true;
+  FBldThrdCount := 0; //建立的线程总数
+  FBusyThrdCount := 0; //繁忙的线程数
+  FIdleThrdCount := 0; //空闲的线程数
+end;
+
+destructor TThreadPoolManage.Destroy;
+begin
+  ClearThreads; //中止并释放线程队列中的所有线程
+  ClearActions; //清理动作队列中的所有动作项
+
+  FThreadList.Free;
+  FThreadList := nil;
+
+  FActionList.Free;
+  FActionList := nil;
+
+  FFirstActionList.Free;
+  FFirstActionList := nil;
+
+  FActionListChg.Free;
+  FActionListChg := nil;
+
+  FThrdListChg.free;
+  FThrdListChg := nil;
+
+//  inherited;
+end;
+
+procedure TThreadPoolManage.GetNextAction(p_Thread: TThread;
+  var p_Action: TCustomThreadAction);
+begin
+  if p_Thread = nil then
+    exit;
+  if not FThreadsActive then
+    exit; //如果线程池已经去活，就不让取action
+  FActionListChg.Enter;
+  try
+    if FFirstActionList.count > 0 then
+    begin
+      p_Action := FFirstActionList[0];
+      FFirstActionList.delete(0);
+      p_Action.FActionThread := TActionThrd(p_Thread);
+    end
+    else if FActionList.Count > 0 then
+    begin
+      p_Action := FActionList[0];
+      FActionList.delete(0);
+      p_Action.FActionThread := TActionThrd(p_Thread);
+    end;
+    //SendThreadPoolStatus;
+  finally
+    FActionListChg.Leave;
+  end;
+end;
+
+procedure TThreadPoolManage.ResumeAllThread;
+var
+  AThread: TActionThrd;
+  i: Integer;
+begin
+  for i := 0 to FThreadList.Count - 1 do
+  begin
+    AThread := FThreadList[i];
+    if AThread.Suspended then
+      AThread.ResumeEx;
+  end;
+end;
+{
+procedure TThreadPoolManage.SendThreadPoolStatus(p_bPerform: Boolean);
+var
+  iNewTickCount: Integer;
+  bShow: Boolean;
+begin
+  if not FShowStatus then exit;
+  if fiLastTickCount = 0 then
+  begin
+    fiLastTickCount := GetTickCount;
+    p_bPerform := True;
+  end;
+  bShow := true;
+  if not p_bPerform then
+  begin
+    iNewTickCount := GetTickCount;
+    bShow := (iNewTickCount - fiLastTickCount) > 200;
+    if bShow then
+      fiLastTickCount := iNewTickCount
+  end;
+  if bShow then
+  begin
+    SendFormURL('ServiceId=TfmRiskServer.ShowRunStatus' +
+      ';TotalThreadCount=' + IntToStr(FThreadList.count) +
+      ';BusyThreadCount=' + IntToStr(FThreadList.count - FIdleThrdCount) +
+      ';IdleThreadCount=' + IntToStr(FIdleThrdCount) +
+      ';ActionCount=' + IntToStr(FActionList.count) +
+      ';SubActionCount=' + IntToStr(FFirstActionList.Count)+
+      ';PoolType=' + IntToStr(PoolType));
+  end;
+end;
+
+}
+procedure TThreadPoolManage.SetPoolType(const Value: Integer);
+begin
+  FPoolType := Value;
+end;
+
+procedure TThreadPoolManage.SetShowStatus(const Value: Boolean);
+begin
+  FShowStatus := Value;
+end;
+
+procedure TThreadPoolManage.SetThreadsActive(const Value: Boolean);
+begin
+  FThreadsActive := Value;
+end;
+
+procedure TThreadPoolManage.StartThread(p_iThrdCount: Integer);
+var
+  AThread: TActionThrd;
+  i: Integer;
+begin                                   
+  if (p_iThrdCount <= 0) then exit;
+  if (FIdleThrdCount <= 0) then exit;
+
+  FThrdListChg.Enter;
+  try
+    for i := 0 to p_iThrdCount - 1 do
+    begin
+      AThread := FThreadList[0];
+      if AThread.Suspended then //如果第0个线程非挂起，就说明全都忙
+      begin
+        FThreadList.Move(0, FThreadList.Count - 1); //如果找到空闲的线程，就使排到最尾，然后使线程开始工作
+        AThread.ResumeEx;
+        //SendThreadPoolStatus(true);
+      end
+      else
+        Break;
+    end;
+  finally
+    FThrdListChg.Leave;
+  end;
+end;
+
+procedure TThreadPoolManage.StartWork;
+begin
+  ThreadsActive := True;
+end;
+
+procedure TThreadPoolManage.StopWork;
+begin
+  ThreadsActive := False;
+end;
+
+procedure TThreadPoolManage.TerminateAllThread;
+var
+  AThread: TActionThrd;
+  i: Integer;
+begin
+  FThrdListChg.Enter;
+  try
+    for i := 0 to FThreadList.Count - 1 do
+    begin
+      AThread := FThreadList[i];
+      AThread.Terminate;
+      if AThread.Suspended then
+        AThread.ResumeEx;
+    end;
+  finally
+    FThrdListChg.Leave;
+  end;
+end;
+
+procedure TThreadPoolManage.ThreadTerminate(Sender: TObject);
+var
+  iIndex: Integer;
+begin
+//  try
+    FThrdListChg.Enter;
+    try
+      iIndex := FThreadList.IndexOf(Sender);
+      if iIndex <> -1 then
+        FThreadList.Delete(iIndex);
+      InterlockedDecrement(FBldThrdCount);
+      //SendThreadPoolStatus(True);
+    finally
+      FThrdListChg.Leave;
+    end;
+//  except
+//    on e: exception do
+//    begin
+//      SendExceptMsg('TThreadPoolManage.ThreadTerminate-->'+ e.Message,'',e);
+//    end;
+//  end;
+end;
+
+function TThreadPoolManage.ThreadsIsFinished: Boolean;
+begin
+  result := true;
+end;
+
+function TThreadPoolManage.ThreadsIsFreed: Boolean;
+var
+  i: Integer;
+  AThread: TThread;
+begin
+  result := True;
+  for i := 0 to FThreadList.count - 1 do
+  begin
+    AThread := FThreadList[i];
+//    CheckThreadFreed(AThread);
+    if not AThread.Suspended then
+    begin
+      result := false;
+      Break;
+    end;
+  end;
+end;
+
+
+function TThreadPoolManage.ThreadsIsSuspended: Boolean;
+var
+  i: Integer;
+  AThread: TThread;
+begin
+  result := True;
+  for i := 0 to FThreadList.count - 1 do
+  begin
+    AThread := FThreadList[i];
+    if not AThread.Suspended then
+    begin
+      result := False;
+      exit;
+    end;
+    Application.ProcessMessages;
+  end;
+end;
+
+{-------------------------------------------------------------------------------
+  过程名:    TThreadPoolManage.WaitforThreadsFinished
+  作者:      Administrator
+  日期:      2011.03.30
+  参数:      const SleepTime : integer = 100  轮询时间片的时间间隔 （毫秒）
+  返回值:    Boolean
+  功能 ：　　轮询方式等待所有线程结束
+-------------------------------------------------------------------------------}
+
+function TThreadPoolManage.WaitforThreadsFinished(const SleepTime: integer): Boolean;
+begin
+  //Result := False;
+  while (FBusyThrdCount > 0) or (not FStartExecuteAction) do
+    Sleep(SleepTime);
+  Result := True;
+end;
+
+{-------------------------------------------------------------------------------
+  过程名:    TThreadPoolManage.WaitforThreadsFinishedWithProcessMSG
+  作者:      Administrator
+  日期:      2011.03.30
+  参数:      const SleepTime : integer = 100  轮询时间片的时间间隔 （毫秒）
+  返回值:    Boolean
+  功能 ：　　轮询方式等待所有线程结束（轮询间隔处理Application消息更新）
+-------------------------------------------------------------------------------}
+
+function TThreadPoolManage.WaitforThreadsFinishedWithProcessMsg(const SleepTime: integer): Boolean;
+begin
+  while (FBusyThrdCount > 0) or (not FStartExecuteAction) do
+  begin
+    Application.ProcessMessages;
+    //if isThreadOut then Break;
+    Sleep(SleepTime);
+  end;
+  Result := True;
+end;
+
+procedure TThreadPoolManage.ThreadResume(p_Thread: TThread);
+begin
+  if not FStartExecuteAction then FStartExecuteAction := True;
+  InterlockedDecrement(FIdleThrdCount);
+  InterlockedIncrement(FBusyThrdCount);
+end;
+
+procedure TThreadPoolManage.ThreadSuspend(p_Thread: TThread);
+begin
+  InterlockedIncrement(FIdleThrdCount);
+  InterlockedDecrement(FBusyThrdCount);
+  //SendThreadPoolStatus(True);
+end;
+
+
+function TThreadPoolManage.GetActionCount: Integer;
+begin
+  Result := FActionList.Count;
+end;
+
+procedure TThreadPoolManage.StartOneThread;
+begin
+  StartThread(1);
+end;
+
+initialization
+  //ServiceProxy.RegService('GetThreadStatus', ThreadWatck.CallService);
+finalization
+//  if _ThreadWatck <> nil then
+//    FreeAndNil(_ThreadWatck);
+
+{**线程池待完善**
+ * 控制线程池构建的线程数不能大于当前服务器CPU线程数，以免多线程轮用时间片无谓耗时
+   在initialization时读取当前服务器CPU线程数NUMBER_OF_PROCESSORS，
+   在线程池构建时如果设置的线程数大于NUMBER_OF_PROCESSORS,
+   则线程数=NUMBER_OF_PROCESSORS；
+
+ * 线程池的释放可以考虑由调用端主线程发消息通知释放，
+   不用让调用端等待释放完成后再返回，以提高线程池的批量任务的响应时效
+
+ * 内存释放测试
+}
+
+end.
+
+

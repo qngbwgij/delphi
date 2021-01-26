@@ -1,0 +1,344 @@
+unit UGetMacAddress;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
+  Vcl.AppEvnts, Vcl.OleCtrls, SHDocVw, Vcl.Samples.Spin, System.Actions, Vcl.ActnList,
+  RzEdit, MSHTML, Winapi.ActiveX, Vcl.Clipbrd, System.Hash,
+  RzPanel, System.RegularExpressions, SQLiteTable3, RzRadChk, Winapi.WinSock,
+  Winapi.Nb30;
+
+const
+  MAX_HOSTNAME_LEN = 128; { from IPTYPES.H }
+  MAX_DOMAIN_NAME_LEN = 128;
+  MAX_SCOPE_ID_LEN = 256;
+  MAX_ADAPTER_NAME_LENGTH = 256;
+  MAX_ADAPTER_DESCRIPTION_LENGTH = 128;
+  MAX_ADAPTER_ADDRESS_LENGTH = 8;
+
+type
+  TIPAddressString = array[0..4 * 4 - 1] of Char;
+
+  PIPAddrString = ^TIPAddrString;
+
+  TIPAddrString = record
+    Next: PIPAddrString;
+    IPAddress: TIPAddressString;
+    IPMask: TIPAddressString;
+    Context: Integer;
+  end;
+
+  PFixedInfo = ^TFixedInfo;
+
+  TFixedInfo = record { FIXED_INFO }
+    HostName: array[0..MAX_HOSTNAME_LEN + 3] of Char;
+    DomainName: array[0..MAX_DOMAIN_NAME_LEN + 3] of Char;
+    CurrentDNSServer: PIPAddrString;
+    DNSServerList: TIPAddrString;
+    NodeType: Integer;
+    ScopeId: array[0..MAX_SCOPE_ID_LEN + 3] of Char;
+    EnableRouting: Integer;
+    EnableProxy: Integer;
+    EnableDNS: Integer;
+  end;
+
+  PIPAdapterInfo = ^TIPAdapterInfo;
+
+  TIPAdapterInfo = record { IP_ADAPTER_INFO }
+    Next: PIPAdapterInfo;
+    ComboIndex: Integer;
+    AdapterName: array[0..MAX_ADAPTER_NAME_LENGTH + 3] of Char;
+    Description: array[0..MAX_ADAPTER_DESCRIPTION_LENGTH + 3] of Char;
+    AddressLength: Integer;
+    Address: array[1..MAX_ADAPTER_ADDRESS_LENGTH] of Byte;
+    Index: Integer;
+    _Type: Integer;
+    DHCPEnabled: Integer;
+    CurrentIPAddress: PIPAddrString;
+    IPAddressList: TIPAddrString;
+    GatewayList: TIPAddrString;
+    DHCPServer: TIPAddrString;
+    HaveWINS: Bool;
+    PrimaryWINSServer: TIPAddrString;
+    SecondaryWINSServer: TIPAddrString;
+    LeaseObtained: Integer;
+    LeaseExpires: Integer;
+  end;
+
+procedure GetAdapterInformation;  //无效
+
+function GetMacAddress1: string;  //无效
+
+function NBGetAdapterAddress(a: Integer): string;  //无效
+
+function GetMacAddress2(AserverName: string): string;   //为空时可获取当前正在使用的网终MAC地址
+
+implementation
+
+function sendarp(ipaddr: ulong; temp: dword; ulmacaddr: pointer; ulmacaddrleng: pointer): DWord; stdcall; external 'Iphlpapi.dll' name 'SendARP';
+
+function GetMacAddress1: string;
+var
+  myip: ulong;
+  mymac: array[0..5] of byte;
+  mymaclength: ulong;
+  r: integer;
+begin
+  myip := inet_addr(PAnsiChar('192.168.6.180'));
+  mymaclength := length(mymac);
+  r := sendarp(myip, 0, @mymac, @mymaclength);
+
+//label1.caption:='errorcode:'+inttostr(r);
+  Result := format('%2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x', [mymac[0], mymac[1], mymac[2], mymac[3], mymac[4], mymac[5]]);
+end;
+
+
+//Function sendarp; External 'Iphlpapi.dll' Name 'SendARP';
+
+function GetAdaptersInfo(AI: PIPAdapterInfo; var BufLen: Integer): Integer; stdcall; external 'iphlpapi.dll' name 'GetAdaptersInfo';
+
+procedure GetAdapterInformation;
+var
+  AI, Work: PIPAdapterInfo;
+  Size: Integer;
+  Res: Integer;
+  I: Integer;
+  Linshstringlist: TStringList;
+
+  function MACToStr(ByteArr: PByte; Len: Integer): string;
+  begin
+    Result := '';
+    while (Len > 0) do
+    begin
+      Result := Result + IntToHex(ByteArr^, 2) + '-';
+      ByteArr := Pointer(Integer(ByteArr) + SizeOf(Byte));
+      Dec(Len);
+    end;
+    SetLength(Result, Length(Result) - 1); { remove last dash }
+  end;
+
+  function GetAddrString(Addr: PIPAddrString): string;
+  begin
+    Result := '';
+    while (Addr <> nil) do
+    begin
+      Result := Result + 'A: ' + Addr^.IPAddress + ' M: ' + Addr^.IPMask + #13;
+      Addr := Addr^.Next;
+    end;
+  end;
+
+  function TimeTToDateTimeStr(TimeT: Integer): string;
+  const
+    UnixDateDelta = 25569; { days between 12/31/1899 and 1/1/1970 }
+  var
+    DT: TDateTime;
+    TZ: TTimeZoneInformation;
+    Res: DWord;
+  begin
+    if (TimeT = 0) then
+      Result := ''
+    else
+    begin
+    { Unix TIME_T is secs since 1/1/1970 }
+      DT := UnixDateDelta + (TimeT / (24 * 60 * 60)); { in UTC }
+    { calculate bias }
+      Res := GetTimeZoneInformation(TZ);
+      if (Res = TIME_ZONE_ID_INVALID) then
+        RaiseLastWin32Error;
+      if (Res = TIME_ZONE_ID_STANDARD) then
+      begin
+        DT := DT - ((TZ.Bias + TZ.StandardBias) / (24 * 60));
+        Result := DateTimeToStr(DT) + ' ' + WideCharToString(TZ.StandardName);
+      end
+      else
+      begin { daylight saving time }
+        DT := DT - ((TZ.Bias + TZ.DaylightBias) / (24 * 60));
+        Result := DateTimeToStr(DT) + ' ' + WideCharToString(TZ.DaylightName);
+      end;
+    end;
+  end;
+
+begin
+  Linshstringlist := TStringList.Create;
+  try
+    Size := 5120;
+    GetMem(AI, Size);
+    Res := GetAdaptersInfo(AI, Size);
+    if (Res <> ERROR_SUCCESS) then
+    begin
+      SetLastError(Res);
+      RaiseLastWin32Error;
+    end;
+    with Linshstringlist do
+    begin
+      Work := AI;
+      I := 1;
+      repeat
+        Add('');
+        Add('Adapter ' + IntToStr(I));
+        Add(' ComboIndex: ' + IntToStr(Work^.ComboIndex));
+        Add(' Adapter name: ' + Work^.AdapterName);
+        Add(' Description: ' + Work^.Description);
+        Add(' Adapter address: ' + MACToStr(@Work^.Address, Work^.AddressLength));
+        Add(' Index: ' + IntToStr(Work^.Index));
+        Add(' Type: ' + IntToStr(Work^._Type));
+        Add(' DHCP: ' + IntToStr(Work^.DHCPEnabled));
+        Add(' Current IP: ' + GetAddrString(Work^.CurrentIPAddress));
+        Add(' IP addresses: ' + GetAddrString(@Work^.IPAddressList));
+        Add(' Gateways: ' + GetAddrString(@Work^.GatewayList));
+        Add(' DHCP servers: ' + GetAddrString(@Work^.DHCPServer));
+        Add(' Has WINS: ' + IntToStr(Integer(Work^.HaveWINS)));
+        //Add(' Primary WINS: '+GetAddrString(@Work^.PrimaryWINSServer));
+        //Add(' Secondary WINS: '+GetAddrString(@Work^.SecondaryWINSServer));
+        Add(' Lease obtained: ' + TimeTToDateTimeStr(Work^.LeaseObtained));
+        Add(' Lease expires: ' + TimeTToDateTimeStr(Work^.LeaseExpires));
+        Inc(I);
+        Work := Work^.Next;
+      until (Work = nil);
+    end;
+    FreeMem(AI);
+  finally
+    Linshstringlist.SaveToFile('macinfolist.txt');
+    Linshstringlist.Free;
+  end;
+end;
+
+function NBGetAdapterAddress(a: Integer): string;
+var
+  NCB: TNCB; // Netbios control block //NetBios控制块
+  ADAPTER: TADAPTERSTATUS; // Netbios adapter status//取网卡状态
+  LANAENUM: TLANAENUM; // Netbios lana
+  intIdx: Integer; // Temporary work value//临时变量
+  cRC: AnsiChar; // Netbios return code//NetBios返回值
+  strTemp: string; // Temporary string//临时变量
+begin
+  Result := '';
+
+  try
+    ZeroMemory(@NCB, SizeOf(NCB)); // Zero control blocl
+
+    NCB.ncb_command := Chr(NCBENUM); // Issue enum command
+    cRC := NetBios(@NCB);
+
+    NCB.ncb_buffer := @LANAENUM; // Reissue enum command
+    NCB.ncb_length := SizeOf(LANAENUM);
+    cRC := NetBios(@NCB);
+    if Ord(cRC) <> 0 then
+      exit;
+
+    ZeroMemory(@NCB, SizeOf(NCB)); // Reset adapter
+    NCB.ncb_command := Chr(NCBRESET);
+    NCB.ncb_lana_num := LANAENUM.lana[a];
+    cRC := NetBios(@NCB);
+    if Ord(cRC) <> 0 then
+      exit;
+
+    ZeroMemory(@NCB, SizeOf(NCB)); // Get adapter address
+    NCB.ncb_command := Chr(NCBASTAT);
+    NCB.ncb_lana_num := LANAENUM.lana[a];
+    StrPCopy(NCB.ncb_callname, '*');
+    NCB.ncb_buffer := @ADAPTER;
+    NCB.ncb_length := SizeOf(ADAPTER);
+    cRC := NetBios(@NCB);
+
+    strTemp := ''; // Convert it to string
+    for intIdx := 0 to 5 do
+      strTemp := strTemp + InttoHex(Integer(ADAPTER.adapter_address[intIdx]), 2);
+    Result := strTemp;
+  finally
+  end;
+end;
+
+function GetMacAddress2(AserverName: string): string;
+type
+  TNetTransportEnum = function(pszServer: PWideChar; Level: DWORD; var pbBuffer: pointer; PrefMaxLen: LongInt; var EntriesRead: DWORD; var TotalEntries: DWORD; var ResumeHandle: DWORD): DWORD; stdcall;
+
+  TNetApiBufferFree = function(Buffer: pointer): DWORD; stdcall;
+
+  PTransportInfo = ^TTransportInfo;
+
+  TTransportInfo = record
+    quality_of_service: DWORD;
+    number_of_vcs: DWORD;
+    transport_name: PWChar;
+    transport_address: PWChar;
+    wan_ish: boolean;
+  end;
+var
+  E, ResumeHandle, EntriesRead, TotalEntries: DWORD;
+  FLibHandle: THandle;
+  sMachineName, sMacAddr, Retvar: string;
+  pBuffer: pointer;
+  pInfo: PTransportInfo;
+  FNetTransportEnum: TNetTransportEnum;
+  FNetApiBufferFree: TNetApiBufferFree;
+  pszServer: array[0..128] of WideChar;
+  i, ii, iIdx: integer;
+begin
+  try
+    sMachineName := trim(AserverName);
+    Retvar := '00-00-00-00-00-00';
+
+  // Add leading \\ if missing
+    if (sMachineName <> '') and (length(sMachineName) >= 2) then
+    begin
+      if copy(sMachineName, 1, 2) <> '\\' then
+        sMachineName := '\\' + sMachineName
+    end;
+
+  // Setup and load from DLL
+    pBuffer := nil;
+    ResumeHandle := 0;
+    FLibHandle := LoadLibrary('NETAPI32.DLL');
+
+  // Execute the external function
+    if FLibHandle <> 0 then
+    begin
+      @FNetTransportEnum := GetProcAddress(FLibHandle, 'NetWkstaTransportEnum');
+      @FNetApiBufferFree := GetProcAddress(FLibHandle, 'NetApiBufferFree');
+      E := FNetTransportEnum(StringToWideChar(sMachineName, pszServer, 129), 0, pBuffer, -1, EntriesRead, TotalEntries, ResumeHandle);
+
+      if E = 0 then
+      begin
+        pInfo := pBuffer;
+
+      // Enumerate all protocols – look for TCPIP
+        for i := 1 to EntriesRead do
+        begin
+          if pos('TCPIP', UpperCase(pInfo^.transport_name)) <> 0 then
+          begin
+          // Got It – now format result xx-xx-xx-xx-xx-xx
+            iIdx := 1;
+            sMacAddr := pInfo^.transport_address;
+
+            for ii := 1 to 12 do
+            begin
+              Retvar[iIdx] := sMacAddr[ii];
+              inc(iIdx);
+              if iIdx in [3, 6, 9, 12, 15] then
+                inc(iIdx);
+            end;
+          end;
+
+          inc(pInfo);
+        end;
+        if pBuffer <> nil then
+          FNetApiBufferFree(pBuffer);
+      end;
+
+      try
+        FreeLibrary(FLibHandle);
+      except
+      // 错误处理
+      end;
+    end;
+    result := Retvar;
+  except
+    result := '';
+  end;
+end;
+
+end.
+

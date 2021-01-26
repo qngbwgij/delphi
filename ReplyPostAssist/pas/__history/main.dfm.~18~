@@ -1,0 +1,182 @@
+object MainForm: TMainForm
+  Left = 0
+  Top = 0
+  Caption = 'Initializing browser. Please wait...'
+  ClientHeight = 624
+  ClientWidth = 1038
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  OnCloseQuery = FormCloseQuery
+  OnCreate = FormCreate
+  OnShow = FormShow
+  PixelsPerInch = 96
+  TextHeight = 13
+  object AddressPnl: TPanel
+    Left = 0
+    Top = 0
+    Width = 1038
+    Height = 30
+    Align = alTop
+    BevelOuter = bvNone
+    Enabled = False
+    Padding.Left = 5
+    Padding.Top = 5
+    Padding.Right = 5
+    Padding.Bottom = 5
+    TabOrder = 0
+    object SpeedButton1: TSpeedButton
+      Left = 5
+      Top = 5
+      Width = 23
+      Height = 20
+      Action = actPrev
+      Align = alLeft
+      ExplicitLeft = 8
+      ExplicitTop = 8
+      ExplicitHeight = 22
+    end
+    object SpeedButton2: TSpeedButton
+      Left = 51
+      Top = 5
+      Width = 23
+      Height = 20
+      Action = actHome
+      Align = alLeft
+      ExplicitLeft = 24
+      ExplicitTop = 0
+      ExplicitHeight = 22
+    end
+    object SpeedButton3: TSpeedButton
+      Left = 28
+      Top = 5
+      Width = 23
+      Height = 20
+      Action = actNext
+      Align = alLeft
+      ExplicitLeft = 22
+      ExplicitTop = 4
+    end
+    object AddressEdt: TEdit
+      Left = 74
+      Top = 5
+      Width = 928
+      Height = 20
+      Margins.Right = 5
+      Align = alClient
+      TabOrder = 0
+      Text = 'https://tieba.baidu.com/index.html'
+      OnKeyPress = AddressEdtKeyPress
+      ExplicitLeft = 51
+      ExplicitWidth = 800
+    end
+    object GoBtn: TButton
+      Left = 1002
+      Top = 5
+      Width = 31
+      Height = 20
+      Margins.Left = 5
+      Align = alRight
+      Caption = 'Go'
+      TabOrder = 1
+      OnClick = GoBtnClick
+      ExplicitLeft = 1007
+      ExplicitTop = 4
+    end
+  end
+  object CEFWindowParent1: TCEFWindowParent
+    Left = 0
+    Top = 30
+    Width = 1038
+    Height = 594
+    Align = alClient
+    TabOrder = 1
+  end
+  object Timer1: TTimer
+    Enabled = False
+    Interval = 300
+    OnTimer = Timer1Timer
+    Left = 56
+    Top = 88
+  end
+  object Chromium1: TChromium
+    OnLoadStart = Chromium1LoadStart
+    OnLoadEnd = Chromium1LoadEnd
+    OnJsdialog = Chromium1Jsdialog
+    OnBeforePopup = Chromium1BeforePopup
+    OnAfterCreated = Chromium1AfterCreated
+    OnBeforeClose = Chromium1BeforeClose
+    OnClose = Chromium1Close
+    OnOpenUrlFromTab = Chromium1OpenUrlFromTab
+    Left = 56
+    Top = 152
+  end
+  object ActionList: TActionList
+    Left = 400
+    Top = 184
+    object actPrev: TAction
+      Caption = '<-'
+      Enabled = False
+      OnExecute = actPrevExecute
+      OnUpdate = actPrevUpdate
+    end
+    object actNext: TAction
+      Caption = '->'
+      Enabled = False
+      OnExecute = actNextExecute
+      OnUpdate = actNextUpdate
+    end
+    object actHome: TAction
+      Caption = 'H'
+      OnExecute = actHomeExecute
+      OnUpdate = actHomeUpdate
+    end
+    object actReload: TAction
+      Caption = 'R'
+    end
+    object actGoTo: TAction
+      Caption = '>'
+    end
+    object actGetSource: TAction
+      Caption = 'Get source'
+    end
+    object actGetText: TAction
+      Caption = 'Get text'
+    end
+    object actZoomIn: TAction
+      Caption = 'Zoom in'
+    end
+    object actZoomOut: TAction
+      Caption = 'Zoom out'
+    end
+    object actZoomReset: TAction
+      Caption = 'Zoom reset'
+    end
+    object actExecuteJS: TAction
+      Caption = 'Execute JavaScript'
+    end
+    object actDom: TAction
+      Caption = 'Hook DOM'
+    end
+    object actDevTool: TAction
+      AutoCheck = True
+      Caption = 'Show DevTools'
+    end
+    object actDoc: TAction
+      Caption = 'Documentation'
+    end
+    object actGroup: TAction
+      Caption = 'Google group'
+    end
+    object actFileScheme: TAction
+      Caption = 'File Scheme'
+    end
+    object actPrint: TAction
+      Caption = 'Print'
+    end
+  end
+end

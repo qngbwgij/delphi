@@ -1,0 +1,10 @@
+unit UinstanceHua;
+
+interface
+
+var
+  DbName1: string = 'KS.db3';
+
+implementation
+
+end.

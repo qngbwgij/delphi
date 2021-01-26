@@ -1,0 +1,91 @@
+object FormSetHttpConfi: TFormSetHttpConfi
+  Left = 0
+  Top = 0
+  Caption = 'FormSetHttpConfi'
+  ClientHeight = 403
+  ClientWidth = 580
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  OnCreate = FormCreate
+  OnShow = FormShow
+  PixelsPerInch = 96
+  TextHeight = 13
+  object RzPanel1: TRzPanel
+    Left = 0
+    Top = 0
+    Width = 580
+    Height = 403
+    Align = alClient
+    TabOrder = 0
+    object RzPanel2: TRzPanel
+      Left = 2
+      Top = 2
+      Width = 576
+      Height = 41
+      Align = alTop
+      TabOrder = 0
+    end
+    object RzPanelBot: TRzPanel
+      Left = 2
+      Top = 328
+      Width = 576
+      Height = 73
+      Align = alBottom
+      TabOrder = 1
+      object RzButtonSave: TRzButton
+        Left = 200
+        Top = 24
+        Caption = #20445#23384
+        TabOrder = 0
+        OnClick = RzButtonSaveClick
+      end
+    end
+    object RzPanel4: TRzPanel
+      Left = 2
+      Top = 43
+      Width = 576
+      Height = 285
+      Align = alClient
+      TabOrder = 2
+      object RzMemoCookieForReplyinMain: TRzMemo
+        Left = 2
+        Top = 2
+        Width = 572
+        Height = 193
+        Align = alTop
+        Lines.Strings = (
+          'BAIDUID=2157B58E23ABE4747F145324F6723AAC:FG=1'
+          '; TIEBA_USERTYPE=a043d10a3b2f8777671a821a; '
+          'PSTM=1577617878; bdshare_firstime=1577625151569; '
+          'BIDUPSID=78D84CDAB8417A317767ABD0B55380B7; '
+          'BDORZ=B490B5EBF6F3CD402E515D22BCDA1598; '
+          'delPer=0; '
+          'H_PS_PSSID=1442_21087_30211_30489_30284_30480; '
+          'wise_device=0; ZD_ENTRY=empty; '
+          'BDUSS=3BncTAxfmFTYjJEZU93UzdlRWpiSFJZODY5SmRv'
+          'NGM4dS10MFBxV29YMVlmRFZlRVFBQUFBJCQAAAAAAAA'
+          'AAAEAAADhBrcayP236NXmyMsAAAAAAAAAAAAAAAAA'
+          'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+          'AAAAAAAAAAAAAAAAAAFjvDV5Y7w1eZ; '
+          'TIEBAUID=9d2ff1eb67524b65e01c2fd7; '
+          'STOKEN=6babc09a5a4ac9b3aa5628c27acddd3c8122cdb'
+          '84e30c2010d69393e6d20b04a; '
+          'Hm_lvt_98b9d8c2fd6608d564bf2ac2ae642948=1577954'
+          '166,1577954173,1577965539,1577971558; '
+          'Hm_lvt_287705c8d9e2073d13275b18dbd746dc=157788'
+          '9259,1577954101,1577954173,1577971603; '
+          'Hm_lpvt_98b9d8c2fd6608d564bf2ac2ae642948=157797'
+          '2262; '
+          'Hm_lpvt_287705c8d9e2073d13275b18dbd746dc=15779'
+          '72262')
+        ScrollBars = ssBoth
+        TabOrder = 0
+      end
+    end
+  end
+end

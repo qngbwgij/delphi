@@ -1,0 +1,72 @@
+object FrmShowMytaobao: TFrmShowMytaobao
+  Left = 0
+  Top = 0
+  BorderStyle = bsNone
+  Caption = 'FrmShowMytaobao'
+  ClientHeight = 225
+  ClientWidth = 564
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  Position = poScreenCenter
+  OnShow = FormShow
+  PixelsPerInch = 96
+  TextHeight = 13
+  object RzPanel1: TRzPanel
+    Left = 0
+    Top = 0
+    Width = 564
+    Height = 225
+    Align = alClient
+    TabOrder = 0
+    OnMouseDown = RzPanel1MouseDown
+    OnPaint = RzPanel1Paint
+    object RzURLLabel1: TRzURLLabel
+      Left = 8
+      Top = 163
+      Width = 62
+      Height = 13
+      Caption = 'RzURLLabel1'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clHighlight
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = [fsUnderline]
+      ParentFont = False
+      OnClick = RzURLLabel1Click
+    end
+    object LinkLabel1: TLinkLabel
+      Left = 104
+      Top = 97
+      Width = 94
+      Height = 20
+      Caption = 'LinkLabel1'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -16
+      Font.Name = #40657#20307
+      Font.Style = [fsBold]
+      ParentFont = False
+      TabOrder = 0
+    end
+    object RzPanel2: TRzPanel
+      Left = 2
+      Top = 182
+      Width = 560
+      Height = 41
+      Align = alBottom
+      TabOrder = 1
+      object RzButton1: TRzButton
+        Left = 208
+        Top = 8
+        Caption = #24050#38405
+        TabOrder = 0
+        OnClick = RzButton1Click
+      end
+    end
+  end
+end

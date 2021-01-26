@@ -1,0 +1,505 @@
+unit UupdateDB;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Grids, RzGrids, Vcl.StdCtrls,
+  Vcl.ComCtrls, Vcl.ExtCtrls, SQLiteTable3, UPublic, Vcl.Mask, RzEdit, RzPanel, UPublicEX,
+  RzButton, RzRadChk, uThrdPoolClass, DateUtils, Uni, RzLabel, RzSpnEdt,
+  Vcl.Samples.Spin, RzPrgres;
+
+type
+  TUpdateDBFromSource = class(TBusiaction)
+  public
+    procedure Operate; override;
+  end;
+
+  TInerceptDBFromSource = class(TBusiaction)
+  public
+    RestrictDays: Integer;
+    procedure Operate; override;
+  end;
+
+
+type
+  TFormupdateDB = class(TForm)
+    RzPanel1: TRzPanel;
+    RzButtonUpdate: TRzButton;
+    RzButtonintercept: TRzButton;
+    RzLabelDay: TRzLabel;
+    RzSpinEditDays: TSpinEdit;
+    RzProgressBar1: TRzProgressBar;
+    RzCheckBoxCoverOrnot: TRzCheckBox;
+    procedure RzButtonUpdateClick(Sender: TObject);
+    procedure RzButtoninterceptClick(Sender: TObject);
+  private
+    { Private declarations }
+    procedure ShowProgress(var Msg: TMessage); message WM_USER + 110;
+  public
+    { Public declarations }
+  end;
+
+var
+  FormupdateDB: TFormupdateDB;
+
+  NewestDateTimeInDB: TDateTime;
+  QualifiedRecordCount: string;
+
+
+  SourceFileDir: string;
+  DestinFileDir: string;
+
+  GErrorInfo: string = '';
+  Gchangedcount: string = '';
+
+  suDBNameList: TStringList;
+
+implementation
+
+{$R *.dfm}
+
+
+
+
+procedure TFormupdateDB.RzButtoninterceptClick(Sender: TObject);
+var
+
+  TheCopyTableAct: TInerceptDBFromSource;
+  VarHint: string;
+
+  AATProxyEX: TInstActionProxy;
+
+begin
+  DestinFileDir := APPCommonPath + 'SaveDugInfo.db3';
+  if not fileexists(DestinFileDir) then
+  begin
+    ShowMessageEX('目标文件不存在');
+    Exit;
+  end;
+
+  VarHint := RzButtonintercept.Caption;
+  RzButtonintercept.Caption := '';
+
+  RzButtonUpdate.Enabled := False;
+  RzButtonintercept.Enabled := False;
+
+  AATProxyEX := TInstActionProxy.create;
+  AATProxyEX.BldThreadPool(1); //创建6个线程用来加载表   55    90    120
+  AATProxyEX.StartWork; //开始工作
+  with THandleWaitings.create(100) do
+  try
+    iniWaiting(sender, 7, 7);
+
+    TheCopyTableAct := TInerceptDBFromSource.create;
+    TheCopyTableAct.RestrictDays := Trunc(RzSpinEditDays.Value);
+    AATProxyEX.AddAction(TheCopyTableAct);
+    AATProxyEX.WaitforThreadsFinishedWithProcessMsg;
+    if GErrorInfo = '' then
+    begin
+      ShowMessageEX('更新成功！，减少' + Gchangedcount + '条');
+      Gchangedcount := '';
+    end
+    else
+    begin
+      ShowMessageEX('更新失败！原因：' + GErrorInfo);
+      GErrorInfo := '';
+      Gchangedcount := '';
+    end;
+  finally
+    finalWaiting;
+
+    AATProxyEX.Free;
+
+    RzButtonintercept.Caption := VarHint;
+    RzButtonUpdate.Enabled := True;
+    RzButtonintercept.Enabled := True;
+  end;
+end;
+
+procedure TFormupdateDB.RzButtonUpdateClick(Sender: TObject);
+var
+
+  TheCopyTableAct: TUpdateDBFromSource;
+  VarHint: string;
+
+  AATProxyEX: TInstActionProxy;
+
+ SearchRec:TSearchRec;
+ found:integer;
+ //suDBNameList: TStringList;
+ suDBName: string;
+
+const
+  relativePasth: string = 'UpdateSource\';
+
+begin
+  RzCheckBoxCoverOrnot.Enabled := False;
+  try
+      if RzCheckBoxCoverOrnot.Checked then
+      begin
+        RzProgressBar1.Visible := false;
+      end
+      else
+      begin
+        RzProgressBar1.Visible := true;
+      end;
+
+
+       suDBNameList := TStringList.Create;
+
+       try
+             SourceFileDir := APPCommonPath + relativePasth;
+
+             found:=FindFirst(SourceFileDir+'*.*',faAnyFile,SearchRec);
+
+             while found=0 do
+             begin
+                 if (SearchRec.Name<>'.')  and (SearchRec.Name<>'..')
+                 and (SearchRec.Attr<>faDirectory)
+                 then
+                 begin
+                   suDBName := SearchRec.Name;
+                   suDBNameList.Add(suDBName);
+                 end;
+                 found:=FindNext(SearchRec);
+             end;
+             FindClose(SearchRec);
+
+             if suDBNameList.Count < 1 then
+             begin
+                ShowMessageEX('更新源不存在');
+                Exit;
+             end;
+
+
+
+    //        if not fileexists(SourceFileDir) then
+    //        begin
+    //          ShowMessageEX('更新源不存在');
+    //          Exit;
+    //        end;
+
+            DestinFileDir := APPCommonPath + 'SaveDugInfo.db3';
+            if not fileexists(DestinFileDir) then
+            begin
+              ShowMessageEX('目标文件不存在');
+              Exit;
+            end;
+
+            VarHint := RzButtonUpdate.Caption;
+            RzButtonUpdate.Caption := '';
+
+            RzButtonUpdate.Enabled := False;
+            RzButtonintercept.Enabled := False;
+
+            AATProxyEX := TInstActionProxy.create;
+            AATProxyEX.BldThreadPool(1); //创建6个线程用来加载表   55    90    120
+            AATProxyEX.StartWork; //开始工作
+            with THandleWaitings.create(100) do
+            try
+              iniWaiting(sender, 7, 7);
+
+              TheCopyTableAct := TUpdateDBFromSource.create;
+              AATProxyEX.AddAction(TheCopyTableAct);
+              AATProxyEX.WaitforThreadsFinishedWithProcessMsg;
+              if GErrorInfo = '' then
+              begin
+                ShowMessageEX('更新成功！，新增' + Gchangedcount + '条');
+                Gchangedcount := '';
+              end
+              else
+              begin
+                ShowMessageEX('更新失败！原因：' + GErrorInfo);
+                GErrorInfo := '';
+              end;
+            finally
+              finalWaiting;
+
+              AATProxyEX.Free;
+
+              RzButtonUpdate.Caption := VarHint;
+              RzButtonUpdate.Enabled := True;
+              RzButtonintercept.Enabled := True;
+            end;
+       finally
+           suDBNameList.Free;
+       end;
+
+
+       RzProgressBar1.Visible := false;
+  finally
+      RzCheckBoxCoverOrnot.Enabled := True;
+  end;
+end;
+
+
+procedure TFormupdateDB.ShowProgress(var Msg: TMessage);
+var
+  WPARAMPara, LPARAMPara: integer;
+begin
+  WPARAMPara := Msg.WParam;
+  LPARAMPara := Msg.LParam;
+  if (WPARAMPara = 0) and (LPARAMPara = 0) then
+  begin
+    RzProgressBar1.PartsComplete :=  RzProgressBar1.PartsComplete + 1;
+  end
+  else if (WPARAMPara <> 0) and (LPARAMPara = 0) then
+  begin
+    RzProgressBar1.TotalParts := WPARAMPara;
+    RzProgressBar1.PartsComplete := 0;
+  end
+  else if (WPARAMPara = 0) and (LPARAMPara = 1) then
+  begin
+    RzProgressBar1.TotalParts := 0;
+    RzProgressBar1.PartsComplete := 0;
+  end;
+end;
+
+{ TGetMaxDateInDataBase }
+
+procedure TUpdateDBFromSource.Operate;
+var
+  Linshi_slDBpath, Linshi_String: string;
+
+  SQLPart: string;
+  SQLPartPos: Integer;
+
+  SQLPart1, SQLPart2: string;
+
+  UniConnection_Move: TUniConnection;
+  UniQuery_Move: TUniQuery;
+  UniQuery_Move1: TUniQuery;
+
+  ttcs0, ttcs1, Diffttcs: Integer;
+
+  soureRcordCount: Integer;
+  i: Integer;
+  Linshitieziid: string;
+  Linshiupdatetim, Linshiupdatetim1: string;
+  existtieziidornot: string;
+
+  sendMaxValue: Integer;
+begin
+  sendMaxValue := 0;
+  try
+     Diffttcs := 0;
+     for I := 0 to suDBNameList.Count - 1 do
+     begin
+
+          Linshi_slDBpath := SourceFileDir + suDBNameList.Strings[I];
+
+          UniConnection_Move := TUniConnection.Create(nil);
+
+          Linshi_String := 'Provider Name=SQLite;';
+          Linshi_String := Linshi_String + 'Database=' + Linshi_slDBpath + ';';
+          Linshi_String := Linshi_String + 'Encryption Key=SYNCHRONOUSNORMAL;';
+          Linshi_String := Linshi_String + 'Client Library=sqlite3.dll;';
+          Linshi_String := Linshi_String + 'Use Unicode=false;';
+          Linshi_String := Linshi_String + 'Login Prompt=False';
+
+          UniConnection_Move.ConnectString := Linshi_String;
+
+          UniConnection_Move.Password := 'SYNCHRONOUSNORMAL';
+
+
+          UniConnection_Move.Connected := True;
+          UniConnection_Move.Connected := False;
+
+
+          UniQuery_Move := TUniQuery.Create(nil);
+          UniQuery_Move.Connection := UniConnection_Move;
+
+
+          UniQuery_Move1 := TUniQuery.Create(nil);
+          UniQuery_Move1.Connection := UniConnection_Move;
+
+          UniConnection_Move.ExecSQL('ATTACH DATABASE "' + DestinFileDir + '" AS hr KEY ' + QuotedStr('SYNCHRONOUSNORMAL'));
+
+          ttcs0 := StrToInt(UniQueryString(UniQuery_Move, 'select count(1) from [hr].SeeLiangTieziList'));
+
+          soureRcordCount := StrToInt(UniQueryString(UniQuery_Move, 'select count(1) from SeeLiangTieziList'));
+
+
+
+          if soureRcordCount <> 0 then
+          begin
+              if FormupdateDB.RzCheckBoxCoverOrnot.Checked then
+              begin
+                  UniConnection_Move.ExecSQL('replace into [hr].SeeLiangTieziList select * from SeeLiangTieziList');
+              end
+              else
+              begin
+                  if sendMaxValue = 0 then
+                  begin
+                    SendMessage(FormupdateDB.Handle, WM_USER + 110, suDBNameList.Count * soureRcordCount, 0);
+                    sendMaxValue := 1;
+                  end;
+
+                  QuerySqlInuni(UniQuery_Move, 'select TieziID, LastUpdateTime from SeeLiangTieziList order by TieziID asc');
+                  UniQuery_Move.First;
+                  while not UniQuery_Move.Eof  do
+                  begin
+                    SendMessage(FormupdateDB.Handle, WM_USER + 110, 0, 0);
+
+                    Linshitieziid := IntToStr(UniQuery_Move.Fields[0].AsInteger - 2079619440 + 6374586736);
+
+                    Linshiupdatetim := UniQuery_Move.Fields[1].AsString;
+
+
+                    existtieziidornot := UniQueryString(UniQuery_Move1, 'select count(1) from [hr].SeeLiangTieziList where TieziID=' + Linshitieziid);
+
+
+                    if existtieziidornot <> '0' then
+                    begin
+                      Linshiupdatetim1 := UniQueryString(UniQuery_Move1, 'select LastUpdateTime from [hr].SeeLiangTieziList where TieziID=' + Linshitieziid);
+                      if CompareStr(Linshiupdatetim, Linshiupdatetim1) < 0 then
+                      begin
+                        UniQuery_Move.Next;
+                        Continue;
+                      end;
+                    end;
+
+                    UniConnection_Move.ExecSQL('replace into [hr].SeeLiangTieziList select * from SeeLiangTieziList where TieziID=' + Linshitieziid);
+                    UniQuery_Move.Next;
+                  end;
+                  FinalQuerySqlInuni(UniQuery_Move);
+              end;
+          end;
+
+
+
+
+          ttcs1 := StrToInt(UniQueryString(UniQuery_Move, 'select count(1) from [hr].SeeLiangTieziList'));
+
+
+
+
+
+
+          UniConnection_Move.ExecSQL('DETACH DATABASE "hr"');
+          UniQuery_Move.Connection := nil;
+          UniQuery_Move.Free;
+
+          UniQuery_Move1.Connection := nil;
+          UniQuery_Move1.Free;
+
+          UniConnection_Move.Free;
+
+          Diffttcs :=  Diffttcs +  (ttcs1 - ttcs0);
+     end;
+
+     SendMessage(FormupdateDB.Handle, WM_USER + 110, 0, 1);
+
+    GErrorInfo := '';
+    Gchangedcount := IntToStr(Diffttcs);
+
+  except on E: Exception do
+    begin
+      GErrorInfo := e.Message;
+      Gchangedcount := '';
+    end;
+  end;
+
+end;
+
+
+
+{ TInerceptDBFromSource }
+
+procedure TInerceptDBFromSource.Operate;
+var
+  Linshi_slDBpath, Linshi_String: string;
+
+  SQLPart: string;
+  SQLPartPos: Integer;
+
+  SQLPart1, SQLPart2: string;
+
+  UniConnection_Move: TUniConnection;
+  UniQuery_Move: TUniQuery;
+  UniQuery_Move1: TUniQuery;
+
+  ttcs0, ttcs1: Integer;
+
+  mindate, maxdate: TDateTime;
+  Differencedays: Integer;
+
+  soureRcordCount: Integer;
+  i: Integer;
+  Linshitieziid: string;
+  Linshiupdatetim, Linshiupdatetim1: string;
+  existtieziidornot: string;
+begin
+  try
+      Linshi_slDBpath := DestinFileDir;
+
+      UniConnection_Move := TUniConnection.Create(nil);
+
+      Linshi_String := 'Provider Name=SQLite;';
+      Linshi_String := Linshi_String + 'Database=' + Linshi_slDBpath + ';';
+      Linshi_String := Linshi_String + 'Encryption Key=SYNCHRONOUSNORMAL;';
+      Linshi_String := Linshi_String + 'Client Library=sqlite3.dll;';
+      Linshi_String := Linshi_String + 'Use Unicode=false;';
+      Linshi_String := Linshi_String + 'Login Prompt=False';
+
+      UniConnection_Move.ConnectString := Linshi_String;
+
+      UniConnection_Move.Password := 'SYNCHRONOUSNORMAL';
+
+
+      UniConnection_Move.Connected := True;
+      UniConnection_Move.Connected := False;
+
+
+      UniQuery_Move := TUniQuery.Create(nil);
+      UniQuery_Move.Connection := UniConnection_Move;
+
+
+//      UniQuery_Move1 := TUniQuery.Create(nil);
+//      UniQuery_Move1.Connection := UniConnection_Move;
+
+      //UniConnection_Move.ExecSQL('ATTACH DATABASE "' + DestinFileDir + '" AS hr KEY ' + QuotedStr('SYNCHRONOUSNORMAL'));
+
+      ttcs0 := StrToInt(UniQueryString(UniQuery_Move, 'select count(1) from [hr].SeeLiangTieziList'));
+
+      mindate := MyStringtoDateTime(UniQueryString(UniQuery_Move, 'SELECT MIN(Createtime) FROM SeeLiangTieziList WHERE Createtime <> '''''));
+      maxdate := MyStringtoDateTime(UniQueryString(UniQuery_Move, 'SELECT MAX(Createtime) FROM SeeLiangTieziList WHERE Createtime <> '''''));
+
+      Differencedays :=  Trunc(maxdate -  mindate);
+
+      if Differencedays > RestrictDays then
+      begin
+          maxdate := IncDay(maxdate, 0 - RestrictDays);
+
+          UniConnection_Move.ExecSQL('delete from SeeLiangTieziList where Createtime<=' + QuotedStr(FormatDateTime('YYYY-MM-DD hh:mm', maxdate)));
+
+          ttcs1 := StrToInt(UniQueryString(UniQuery_Move, 'select count(1) from [hr].SeeLiangTieziList'));
+
+          GErrorInfo := '';
+          Gchangedcount := IntToStr(ttcs0 - ttcs1);
+      end
+      else
+      begin
+        GErrorInfo := '';
+        Gchangedcount := '0';
+      end;
+
+      //UniConnection_Move.ExecSQL('DETACH DATABASE "hr"');
+      UniQuery_Move.Connection := nil;
+      UniQuery_Move.Free;
+
+//      UniQuery_Move1.Connection := nil;
+//      UniQuery_Move1.Free;
+
+      UniConnection_Move.Free;
+  except on E: Exception do
+    begin
+      GErrorInfo := e.Message;
+      Gchangedcount := '';
+    end;
+  end;
+end;
+
+end.
+

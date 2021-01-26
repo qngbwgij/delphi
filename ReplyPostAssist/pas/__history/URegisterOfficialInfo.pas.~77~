@@ -1,0 +1,85 @@
+unit URegisterOfficialInfo;
+
+interface
+
+//
+//var
+//  str_ExpiredTime: string = ''; //初始化的时候都会自己算出 '20191231595959';
+//  FixMacAdress: string = '';
+//  FirstTimeRegisterInfo: string = '';//'0000000001'; //试用版均用0000000001，正式版从0000000002开始一一对应，并记录
+//const
+//  str_Version: string = '0'; //0试用版
+//  str_debug: string = '0';
+//  FirstTimeRegisterInfo_ForOfficial: string = '';
+//  FirstTimeRegisterInfo_ForOfficial_AsAKey: string = '';
+//  Url_CloseService_Active: string  //无提示控制(所有试用版)
+//  = 'https://pan.baidu.com/s/1BDw1jWbzZJ5PVIR21QTsUg';
+//  subString_For_closeservice: string
+//  = '分享的文件已经被取消了';
+//  Url_CloseService_Active_ControlAllTrialVersion: string  //有提示控制(所有试用版)
+//  = 'https://pan.baidu.com/s/1LVhrDSjlerIUjCMWaopVYg';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//var
+//  str_ExpiredTime: string = ''; //初始化的时候都会自己算出 '20191231595959';
+//  FixMacAdress: string;// = '98-3B-8F-E9-19-39';
+//  FirstTimeRegisterInfo: string = '';//'0000000001'; //试用版均用0000000001，正式版从0000000002开始一一对应，并记录
+//const
+//  str_Version: string = '1'; //0试用版，1正式版
+//  str_debug: string = '1';
+//  FirstTimeRegisterInfo_ForOfficial: string = '0513575877';
+//  FirstTimeRegisterInfo_ForOfficial_AsAKey: string = 'delphi';
+//  Url_CloseService_Active: string    //无提示控制(所有正式版)
+//  = 'https://pan.baidu.com/s/1Of_3tMUSOFwNYuAH7RlN6w';
+//  subString_For_closeservice: string
+//  = '分享的文件已经被取消了';
+//  Url_CloseService_Active_ControlAllTrialVersion: string
+//  = 'https://pan.baidu.com/s/1_LqR6HHi7WCcCwX7ZHN1Iw';  //有提示控制(所有正式版)
+
+
+
+
+var
+  str_ExpiredTime: string = ''; //初始化的时候都会自己算出 '20191231595959';
+  FixMacAdress: string;// = '98-3B-8F-E9-19-39';
+  FirstTimeRegisterInfo: string = '';//'0000000001'; //试用版均用0000000001，正式版从0000000002开始一一对应，并记录
+const
+  str_Version: string = '2'; //0试用版，1正式版 2 内测版
+  str_debug: string = '0';
+  FirstTimeRegisterInfo_ForOfficial: string = '0513575877';
+  FirstTimeRegisterInfo_ForOfficial_AsAKey: string = 'delphi';
+
+  Url_CloseService_Active: string    //无提示控制(所有内测版)
+  //= 'https://pan.baidu.com/s/1Of_3tMUSOFwNYuAH7RlN6w';
+  = 'https://pan.baidu.com/s/1uAHvY-qU_cuU40JKvyfQHQ';
+  subString_For_closeservice: string
+  = '分享的文件已经被取消了';
+  Url_CloseService_Active_ControlAllTrialVersion: string
+  //= 'https://pan.baidu.com/s/1_LqR6HHi7WCcCwX7ZHN1Iw';  //有提示控制(所有内测版)
+  = 'https://pan.baidu.com/s/1CoLUOIqsdPRwtn8YkEZKFQ';
+
+
+
+
+
+implementation
+
+end.

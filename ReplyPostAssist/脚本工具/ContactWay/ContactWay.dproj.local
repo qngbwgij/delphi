@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899/12/30 00:00:00.000.741,=C:\Users\DELL\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.025,C:\Users\DELL\Desktop\脚本工具\Project1.dproj=C:\Users\DELL\Desktop\脚本工具\ContactWay.dproj</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.219,=C:\Users\DELL\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.773,=C:\Users\DELL\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.979,=C:\Users\DELL\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.996,C:\Users\DELL\Desktop\AllProjects\ReplyPostAssitProjectGroup\脚本工具\ContactWay\pas\Unit1.pas=C:\Users\DELL\Desktop\AllProjects\ReplyPostAssitProjectGroup\脚本工具\ContactWay\pas\UContactWay.pas</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.469,C:\Users\DELL\Desktop\脚本工具\pas\Unit1.pas=C:\Users\DELL\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.469,C:\Users\DELL\Desktop\脚本工具\pas\Unit1.dfm=C:\Users\DELL\Documents\Embarcadero\Studio\Projects\Unit1.dfm</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.969,C:\Users\DELL\Desktop\脚本工具\Project1.dproj=C:\Users\DELL\Documents\Embarcadero\Studio\Projects\Project1.dproj</Transaction>
+    <Transaction>1899/12/30 00:00:00.000.996,C:\Users\DELL\Desktop\AllProjects\ReplyPostAssitProjectGroup\脚本工具\ContactWay\pas\Unit1.dfm=C:\Users\DELL\Desktop\AllProjects\ReplyPostAssitProjectGroup\脚本工具\ContactWay\pas\UContactWay.dfm</Transaction>
+  </Transactions>
+</BorlandProject>

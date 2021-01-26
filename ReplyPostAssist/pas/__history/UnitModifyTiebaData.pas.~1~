@@ -1,0 +1,24 @@
+unit UnitModifyTiebaData;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs;
+
+type
+  TFormModifyTiebaData = class(TForm)
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  FormModifyTiebaData: TFormModifyTiebaData;
+
+implementation
+
+{$R *.dfm}
+
+end.

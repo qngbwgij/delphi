@@ -1,0 +1,238 @@
+object FormChooseBaname: TFormChooseBaname
+  Left = 0
+  Top = 0
+  BorderStyle = bsDialog
+  Caption = 'FormChooseBaname'
+  ClientHeight = 444
+  ClientWidth = 701
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  OnCreate = FormCreate
+  PixelsPerInch = 96
+  TextHeight = 13
+  object RzPanel1: TRzPanel
+    Left = 0
+    Top = 0
+    Width = 701
+    Height = 73
+    Align = alTop
+    BorderOuter = fsNone
+    TabOrder = 0
+    object RzLabel1: TRzLabel
+      Left = 8
+      Top = 16
+      Width = 36
+      Height = 13
+      Caption = #21517#23383#65306
+    end
+    object RzLabel2: TRzLabel
+      Left = 152
+      Top = 12
+      Width = 60
+      Height = 13
+      Caption = #20851#27880#20154#25968#65306
+    end
+    object RzLabel3: TRzLabel
+      Left = 311
+      Top = 12
+      Width = 12
+      Height = 13
+      Caption = #33267
+    end
+    object RzLabel4: TRzLabel
+      Left = 152
+      Top = 50
+      Width = 60
+      Height = 13
+      Caption = #24635#36148#23376#25968#65306
+    end
+    object RzLabel5: TRzLabel
+      Left = 311
+      Top = 50
+      Width = 12
+      Height = 13
+      Caption = #33267
+    end
+    object RzEditName: TRzEdit
+      Left = 50
+      Top = 8
+      Width = 87
+      Height = 21
+      Text = ''
+      TabOrder = 0
+    end
+    object RzEditFollowStart: TRzEdit
+      Left = 218
+      Top = 8
+      Width = 87
+      Height = 21
+      Text = '0'
+      TabOrder = 1
+    end
+    object RzEditFollowEnd: TRzEdit
+      Left = 329
+      Top = 8
+      Width = 87
+      Height = 21
+      Text = '0'
+      TabOrder = 2
+    end
+    object RzEditPostcStart: TRzEdit
+      Left = 218
+      Top = 46
+      Width = 87
+      Height = 21
+      Text = '0'
+      TabOrder = 3
+    end
+    object RzEditPostcEnd: TRzEdit
+      Left = 329
+      Top = 46
+      Width = 87
+      Height = 21
+      Text = '0'
+      TabOrder = 4
+    end
+    object RzCheckBoxHighVague: TRzCheckBox
+      Left = 50
+      Top = 35
+      Width = 79
+      Height = 15
+      Caption = #39640#27169#31946#25628#32034
+      State = cbUnchecked
+      TabOrder = 5
+    end
+    object RzButtonSearch: TRzButton
+      Left = 440
+      Top = 8
+      Caption = #25628#32034
+      TabOrder = 6
+      OnClick = RzButtonSearchClick
+    end
+    object RzCheckBoxTillAll: TRzCheckBox
+      Left = 538
+      Top = 39
+      Width = 115
+      Height = 15
+      Caption = #30452#21040#20840#37096#26356#26032#23436#25104
+      State = cbUnchecked
+      TabOrder = 7
+    end
+    object RzButtonUpdate: TRzButton
+      Left = 538
+      Top = 8
+      Width = 163
+      Caption = #26356#26032#24403#21069#39029#38754#36148#21543#22522#30784#20449#24687
+      TabOrder = 8
+    end
+  end
+  object RzPanel2: TRzPanel
+    Left = 0
+    Top = 403
+    Width = 701
+    Height = 41
+    Align = alBottom
+    BorderOuter = fsNone
+    TabOrder = 1
+    object RzButton1: TRzButton
+      Left = 264
+      Top = 6
+      Caption = #30830#23450
+      TabOrder = 0
+      OnClick = RzButton1Click
+    end
+  end
+  object cxGrid1: TcxGrid
+    Left = 0
+    Top = 73
+    Width = 701
+    Height = 330
+    Align = alClient
+    TabOrder = 2
+    object cxGrid1DBTableView1: TcxGridDBTableView
+      Navigator.Buttons.CustomButtons = <>
+      DataController.DataSource = UniDataSource1
+      DataController.Summary.DefaultGroupSummaryItems = <>
+      DataController.Summary.FooterSummaryItems = <>
+      DataController.Summary.SummaryGroups = <>
+      OptionsData.Deleting = False
+      OptionsData.DeletingConfirmation = False
+      OptionsData.Editing = False
+      OptionsData.Inserting = False
+      OptionsSelection.MultiSelect = True
+      OptionsSelection.CellMultiSelect = True
+      OptionsSelection.InvertSelect = False
+      OptionsView.FocusRect = False
+      OptionsView.GroupByBox = False
+      object cxGrid1DBTableView1Column5: TcxGridDBColumn
+        Caption = #24207#21495
+        DataBinding.FieldName = 'SeriNo'
+        OnGetDisplayText = cxGrid1DBTableView1Column5GetDisplayText
+        Width = 50
+      end
+      object cxGrid1DBTableView1Column1: TcxGridDBColumn
+        Caption = #36148#21543#21517
+        DataBinding.FieldName = 'TieBaMing'
+        Width = 178
+      end
+      object cxGrid1DBTableView1Column2: TcxGridDBColumn
+        Caption = #20851#27880#20154#25968
+        DataBinding.FieldName = 'FollowerCount'
+        Width = 77
+      end
+      object cxGrid1DBTableView1Column3: TcxGridDBColumn
+        Caption = #24635#36148#23376#25968
+        DataBinding.FieldName = 'AllPostCount'
+        Width = 94
+      end
+      object cxGrid1DBTableView1Column4: TcxGridDBColumn
+        Caption = #19978#27425#26356#26032#26102#38388
+        DataBinding.FieldName = 'LastUpdateTime'
+        Visible = False
+      end
+    end
+    object cxGrid1Level1: TcxGridLevel
+      GridView = cxGrid1DBTableView1
+    end
+  end
+  object RzPanelLoading: TRzPanel
+    Left = 218
+    Top = 176
+    Width = 242
+    Height = 73
+    BorderOuter = fsNone
+    Caption = #21152#36733#20013'...'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -33
+    Font.Name = 'Tahoma'
+    Font.Style = [fsBold]
+    ParentFont = False
+    TabOrder = 3
+  end
+  object UniDataSource1: TUniDataSource
+    DataSet = UniQuery1
+    Left = 104
+    Top = 216
+  end
+  object UniConnection1: TUniConnection
+    Left = 288
+    Top = 224
+  end
+  object UniQuery1: TUniQuery
+    Connection = UniConnection1
+    Left = 200
+    Top = 216
+  end
+  object Timer1: TTimer
+    Enabled = False
+    OnTimer = Timer1Timer
+    Left = 288
+    Top = 128
+  end
+end

@@ -1,0 +1,77 @@
+unit Unit1;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, RzButton, UPublic, Vcl.StdCtrls,
+  Vcl.Mask, RzEdit, System.Hash, URegisterOfficialInfo, UEncrpt;
+
+type
+  TForm1 = class(TForm)
+    RzButton1: TRzButton;
+    RzEdit1: TRzEdit;
+    RzEdit2: TRzEdit;
+    RzButton2: TRzButton;
+    RzButton3: TRzButton;
+    procedure RzButton1Click(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure RzButton3Click(Sender: TObject);
+    procedure RzButton2Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  Form1: TForm1;
+
+implementation
+
+{$R *.dfm}
+
+procedure TForm1.FormShow(Sender: TObject);
+begin
+  RzEdit1.Text := QueryString('select ContactWay from SystemInfo');
+end;
+
+procedure TForm1.RzButton1Click(Sender: TObject);
+begin
+  if UpdateSQLs('UPDATE SystemInfo set ContactWay=' + QuotedStr(Trim(RzEdit1.Text))) then
+    ShowMessageEX('成功！');
+end;
+
+procedure TForm1.RzButton2Click(Sender: TObject);
+var
+  SetMacAddress: string;
+  SetMacAddressAnsi: AnsiString;
+  SetMacAddressAnsiPwidechar: PChar;
+  SetMacAddressAnsiPansichar: PAnsiChar;
+begin
+  try
+    SetMacAddress := Trim(RzEdit2.Text);
+    SetMacAddress := Copy(SetMacAddress, 1, 2) + Copy(SetMacAddress, 4, 2) + Copy(SetMacAddress, 7, 2) + Copy(SetMacAddress, 10, 2) + Copy(SetMacAddress, 13, 2) + Copy(SetMacAddress, 16, 2);
+
+    SetMacAddress := (TFrmRegister.Create).EncryptString(SetMacAddress, FirstTimeRegisterInfo_ForOfficial_AsAKey);
+//    SetMacAddressAnsi := EncryptString(AnsiString(SetMacAddress), AnsiString(FirstTimeRegisterInfo_ForOfficial_AsAKey));//, kb256);
+//    SetMacAddressAnsiPansichar := PAnsiChar(SetMacAddressAnsi);
+//    SetMacAddress :=  SetMacAddressAnsiPansichar;
+
+
+
+    SetMacAddress := THashMD5.GetHashString(FirstTimeRegisterInfo_ForOfficial) + SetMacAddress;
+    if UpdateSQLs('UPDATE SystemInfo set FixMacAddress=''' + SetMacAddress + '''') then
+      ShowMessageEX('成功！');
+  except
+     ShowMessageEX('失败！');
+  end;
+end;
+
+procedure TForm1.RzButton3Click(Sender: TObject);
+begin
+  if UpdateSQLs('UPDATE SystemInfo set LoginTimes=''' + THashMD5.GetHashString(FirstTimeRegisterInfo) + ''', MacAddress=''''') then
+    ShowMessageEX('成功！');
+end;
+
+end.

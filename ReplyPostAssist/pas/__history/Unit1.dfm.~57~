@@ -1,0 +1,5 @@
+inherited FrmBaseForm1: TFrmBaseForm1
+  Caption = 'FrmBaseForm1'
+  PixelsPerInch = 96
+  TextHeight = 13
+end

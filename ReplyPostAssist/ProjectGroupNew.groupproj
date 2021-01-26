@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{A9201D07-0AFB-4537-8B62-1F89423771E1}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="DingTie.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="脚本工具\内测版脚本\ImportMac.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="DingTie">
+        <MSBuild Projects="DingTie.dproj"/>
+    </Target>
+    <Target Name="DingTie:Clean">
+        <MSBuild Projects="DingTie.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DingTie:Make">
+        <MSBuild Projects="DingTie.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="ImportMac">
+        <MSBuild Projects="脚本工具\内测版脚本\ImportMac.dproj"/>
+    </Target>
+    <Target Name="ImportMac:Clean">
+        <MSBuild Projects="脚本工具\内测版脚本\ImportMac.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="ImportMac:Make">
+        <MSBuild Projects="脚本工具\内测版脚本\ImportMac.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="DingTie;ImportMac"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="DingTie:Clean;ImportMac:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="DingTie:Make;ImportMac:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
