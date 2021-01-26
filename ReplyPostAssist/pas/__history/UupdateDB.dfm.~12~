@@ -1,0 +1,86 @@
+object FormupdateDB: TFormupdateDB
+  Left = 0
+  Top = 0
+  BorderStyle = bsToolWindow
+  Caption = #26356#26032#23567#24037#20855
+  ClientHeight = 99
+  ClientWidth = 523
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  Position = poMainFormCenter
+  PixelsPerInch = 96
+  TextHeight = 13
+  object RzPanel1: TRzPanel
+    Left = 0
+    Top = 0
+    Width = 523
+    Height = 99
+    Align = alClient
+    TabOrder = 0
+    ExplicitWidth = 513
+    ExplicitHeight = 89
+    object RzLabelDay: TRzLabel
+      Left = 436
+      Top = 35
+      Width = 12
+      Height = 13
+      Caption = #22825
+    end
+    object RzProgressBar1: TRzProgressBar
+      Left = 2
+      Top = 73
+      Width = 519
+      Align = alBottom
+      BorderWidth = 0
+      InteriorOffset = 0
+      PartsComplete = 0
+      Percent = 0
+      TotalParts = 0
+      Visible = False
+      ExplicitLeft = 232
+      ExplicitTop = 72
+      ExplicitWidth = 200
+    end
+    object RzButtonUpdate: TRzButton
+      Left = 125
+      Top = 29
+      Width = 137
+      Caption = #20174#26356#26032#28304#26356#26032
+      TabOrder = 0
+      OnClick = RzButtonUpdateClick
+    end
+    object RzButtonintercept: TRzButton
+      Left = 278
+      Top = 29
+      Width = 99
+      Caption = #25130#21462#26368#21518
+      TabOrder = 1
+      OnClick = RzButtoninterceptClick
+    end
+    object RzSpinEditDays: TSpinEdit
+      Left = 383
+      Top = 32
+      Width = 47
+      Height = 22
+      MaxValue = 60
+      MinValue = 1
+      TabOrder = 2
+      Value = 1
+    end
+    object RzCheckBoxCoverOrnot: TRzCheckBox
+      Left = 16
+      Top = 34
+      Width = 103
+      Height = 15
+      Caption = #26159#21542#23436#20840#29616#26377#30340
+      Checked = True
+      State = cbChecked
+      TabOrder = 3
+    end
+  end
+end

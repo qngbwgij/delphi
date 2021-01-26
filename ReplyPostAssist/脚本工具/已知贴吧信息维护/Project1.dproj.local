@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2019/06/20 18:24:40.000.741,=C:\Users\DELL\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2019/11/08 12:22:31.000.219,=C:\Users\DELL\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2019/11/12 11:41:04.000.979,=C:\Users\DELL\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2020/05/29 11:51:21.000.841,=C:\Users\DELL\Documents\Embarcadero\Studio\Projects\Unit2.pas</Transaction>
+    <Transaction>2020/05/29 11:51:22.000.005,=C:\Users\DELL\Documents\Embarcadero\Studio\Projects\ServerMethodsUnit1.pas</Transaction>
+    <Transaction>2020/05/29 11:51:22.000.135,=C:\Users\DELL\Documents\Embarcadero\Studio\Projects\ServerContainerUnit1.pas</Transaction>
+    <Transaction>2020/05/29 11:53:58.000.261,=C:\Users\DELL\Documents\Embarcadero\Studio\Projects\Unit2.pas</Transaction>
+    <Transaction>2020/05/29 11:53:58.000.485,=C:\Users\DELL\Documents\Embarcadero\Studio\Projects\ServerContainerUnit1.pas</Transaction>
+    <Transaction>2020/05/29 11:53:58.000.388,=C:\Users\DELL\Documents\Embarcadero\Studio\Projects\ServerMethodsUnit1.pas</Transaction>
+    <Transaction>2020/05/29 11:56:02.000.468,=C:\Users\DELL\Documents\Embarcadero\Studio\Projects\ServerContainerUnit1.pas</Transaction>
+    <Transaction>2020/05/29 11:56:02.000.346,=C:\Users\DELL\Documents\Embarcadero\Studio\Projects\ServerMethodsUnit1.pas</Transaction>
+    <Transaction>2020/05/29 11:56:02.000.179,=C:\Users\DELL\Documents\Embarcadero\Studio\Projects\Unit2.pas</Transaction>
+    <Transaction>2020/05/30 15:16:41.000.718,=C:\Users\DELL\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2020/06/01 10:03:14.000.287,=C:\Users\DELL\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2020/09/02 15:47:31.000.295,=C:\Users\DELL\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2020/09/02 15:49:59.000.649,D:\AllProjects\ReplyPostAssitProjectGroup\eighthVersion\demergeFunctions\2\21\211\2111\脚本工具\已知贴吧信息维护\pas\Unit1.pas=C:\Users\DELL\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2020/09/02 15:49:59.000.649,D:\AllProjects\ReplyPostAssitProjectGroup\eighthVersion\demergeFunctions\2\21\211\2111\脚本工具\已知贴吧信息维护\pas\Unit1.dfm=C:\Users\DELL\Documents\Embarcadero\Studio\Projects\Unit1.dfm</Transaction>
+    <Transaction>2020/09/02 15:50:02.000.997,D:\AllProjects\ReplyPostAssitProjectGroup\eighthVersion\demergeFunctions\2\21\211\2111\脚本工具\已知贴吧信息维护\Project1.dproj=C:\Users\DELL\Documents\Embarcadero\Studio\Projects\Project1.dproj</Transaction>
+    <Transaction>2020/09/02 15:50:52.000.818,=D:\AllProjects\Public\uThrdPoolClass.pas</Transaction>
+    <Transaction>2020/09/02 15:50:52.000.797,=D:\AllProjects\Public\UGlobalPublic_Function.pas</Transaction>
+    <Transaction>2020/09/02 15:51:17.000.442,=D:\AllProjects\ReplyPostAssitProjectGroup\eighthVersion\demergeFunctions\2\21\211\2111\pas\UPublic.pas</Transaction>
+    <Transaction>2020/09/02 15:51:17.000.462,=D:\AllProjects\ReplyPostAssitProjectGroup\eighthVersion\demergeFunctions\2\21\211\2111\pas\UPublicEX.pas</Transaction>
+    <Transaction>2020/09/02 16:08:58.000.788,=D:\AllProjects\Public\ExeStr.pas</Transaction>
+    <Transaction>2020/09/02 16:08:59.000.109,=D:\AllProjects\Public\UGetMacAddress.pas</Transaction>
+    <Transaction>2020/09/02 16:08:59.000.048,=D:\AllProjects\Public\main.pas</Transaction>
+    <Transaction>2020/09/02 16:08:59.000.178,=D:\AllProjects\Public\UinstanceHua.pas</Transaction>
+    <Transaction>2020/09/02 16:08:59.000.138,=D:\AllProjects\Public\UGlobalPublic_IE.pas</Transaction>
+    <Transaction>2020/09/02 16:08:59.000.160,=D:\AllProjects\Public\UGlobalPublic_VersionControl.pas</Transaction>
+    <Transaction>2020/09/02 16:08:59.000.067,=D:\AllProjects\Public\UEncrpt.pas</Transaction>
+  </Transactions>
+</BorlandProject>

@@ -1,0 +1,253 @@
+object FormMain: TFormMain
+  Left = 0
+  Top = 0
+  Caption = 'FormMain'
+  ClientHeight = 599
+  ClientWidth = 908
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  OnClose = FormClose
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  OnShow = FormShow
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Button1: TButton
+    Left = 8
+    Top = 8
+    Width = 75
+    Height = 25
+    Caption = 'Button1'
+    TabOrder = 0
+    Visible = False
+    OnClick = Button1Click
+  end
+  object Button2: TButton
+    Left = 128
+    Top = 8
+    Width = 75
+    Height = 25
+    Caption = 'Button2'
+    TabOrder = 1
+    Visible = False
+  end
+  object Button3: TButton
+    Left = 328
+    Top = 8
+    Width = 75
+    Height = 25
+    Caption = 'Button3'
+    TabOrder = 2
+    Visible = False
+    OnClick = Button3Click
+  end
+  object Button4: TButton
+    Left = 89
+    Top = 8
+    Width = 75
+    Height = 25
+    Caption = 'Button4'
+    TabOrder = 3
+    Visible = False
+    OnClick = Button4Click
+  end
+  object Panel1: TPanel
+    Left = 643
+    Top = 44
+    Width = 265
+    Height = 555
+    Align = alRight
+    TabOrder = 4
+    object RzMemo_UrlList: TRzMemo
+      Left = 1
+      Top = 169
+      Width = 263
+      Height = 255
+      Align = alClient
+      ScrollBars = ssBoth
+      TabOrder = 0
+    end
+    object RzMemo1: TRzMemo
+      Left = 1
+      Top = 1
+      Width = 263
+      Height = 168
+      Align = alTop
+      ScrollBars = ssBoth
+      TabOrder = 1
+    end
+    object RzMemo2: TRzMemo
+      Left = 1
+      Top = 424
+      Width = 263
+      Height = 130
+      Align = alBottom
+      ScrollBars = ssBoth
+      TabOrder = 2
+      Visible = False
+    end
+  end
+  object RzPanel1: TRzPanel
+    Left = 0
+    Top = 0
+    Width = 908
+    Height = 44
+    Align = alTop
+    BorderOuter = fsNone
+    TabOrder = 5
+    ExplicitLeft = -1
+    ExplicitTop = -5
+    object Label1: TLabel
+      Left = 391
+      Top = 17
+      Width = 24
+      Height = 13
+      Caption = #23567#26102
+    end
+    object Label2: TLabel
+      Left = 477
+      Top = 17
+      Width = 12
+      Height = 13
+      Caption = #20998
+    end
+    object Label3: TLabel
+      Left = 551
+      Top = 17
+      Width = 12
+      Height = 13
+      Caption = #31186
+    end
+    object SpinEdit_hour: TSpinEdit
+      Left = 335
+      Top = 13
+      Width = 50
+      Height = 22
+      MaxValue = 0
+      MinValue = 0
+      TabOrder = 0
+      Value = 0
+      OnChange = Action_setintervaltimeExecute
+    end
+    object SpinEdit_minute: TSpinEdit
+      Left = 421
+      Top = 13
+      Width = 50
+      Height = 22
+      MaxValue = 0
+      MinValue = 0
+      TabOrder = 1
+      Value = 30
+      OnChange = Action_setintervaltimeExecute
+    end
+    object SpinEdit_second: TSpinEdit
+      Left = 495
+      Top = 13
+      Width = 50
+      Height = 22
+      MaxValue = 0
+      MinValue = 0
+      TabOrder = 2
+      Value = 0
+      OnChange = Action_setintervaltimeExecute
+    end
+    object RzButton1: TRzButton
+      Left = 22
+      Top = 13
+      Caption = #24320#22987' '
+      TabOrder = 3
+      OnClick = RzButton1Click
+    end
+    object RzButton2: TRzButton
+      Left = 120
+      Top = 13
+      Caption = #36864#20986
+      TabOrder = 4
+    end
+    object RzButton3: TRzButton
+      Left = 217
+      Top = 13
+      Width = 105
+      Caption = #35774#32622#39030#36148#20869#23481
+      TabOrder = 5
+      OnClick = RzButton3Click
+    end
+    object AskInputPoint: TRzCheckBox
+      Left = 592
+      Top = 15
+      Width = 79
+      Height = 15
+      Caption = #35810#38382#36755#20837#28857
+      Checked = True
+      State = cbChecked
+      TabOrder = 6
+    end
+    object AskSubmitPoint: TRzCheckBox
+      Left = 704
+      Top = 15
+      Width = 79
+      Height = 15
+      Caption = #35810#38382#25552#20132#28857
+      Checked = True
+      State = cbChecked
+      TabOrder = 7
+    end
+  end
+  object Panel_CEF: TRzPanel
+    Left = 0
+    Top = 44
+    Width = 643
+    Height = 555
+    Align = alClient
+    BorderOuter = fsNone
+    TabOrder = 6
+  end
+  object Timer1: TTimer
+    Enabled = False
+    OnTimer = Timer1Timer
+    Left = 256
+    Top = 304
+  end
+  object ApplicationEvents1: TApplicationEvents
+    OnShortCut = ApplicationEvents1ShortCut
+    Left = 344
+    Top = 248
+  end
+  object ActionList1: TActionList
+    Left = 240
+    Top = 152
+    object Action1: TAction
+      Tag = 1
+      Caption = 'Action1'
+      OnExecute = Action1Execute
+    end
+    object Action_setintervaltime: TAction
+      Caption = 'Action_setintervaltime'
+      OnExecute = Action_setintervaltimeExecute
+    end
+  end
+  object Timer_ForDingTie: TTimer
+    Enabled = False
+    Interval = 1800000
+    OnTimer = Timer_ForDingTieTimer
+    Left = 424
+    Top = 56
+  end
+  object Timer2: TTimer
+    Enabled = False
+    OnTimer = Timer2Timer
+    Left = 232
+    Top = 401
+  end
+  object Timer_TextCursorChange: TTimer
+    Interval = 100
+    OnTimer = Timer_TextCursorChangeTimer
+    Left = 104
+    Top = 233
+  end
+end

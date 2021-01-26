@@ -1,0 +1,61 @@
+unit UShowMytaobao;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Winapi.ShellAPI, UConstants,
+  Vcl.StdCtrls, RzLabel, RzButton, Vcl.ExtCtrls, RzPanel;
+
+type
+  TFrmShowMytaobao = class(TForm)
+    RzURLLabel1: TRzURLLabel;
+    RzPanel1: TRzPanel;
+    RzButton1: TRzButton;
+    LinkLabel1: TLinkLabel;
+    procedure RzURLLabel1Click(Sender: TObject);
+    procedure RzButton1Click(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  FrmShowMytaobao: TFrmShowMytaobao;
+
+function ShowMessageMyTaobao(ShowStr: string): Integer;
+
+implementation
+
+{$R *.dfm}
+
+procedure TFrmShowMytaobao.FormShow(Sender: TObject);
+begin
+  RzURLLabel1.URL := TaobaoAddres;
+  RzURLLabel1.Caption := TaobaoAddres;
+end;
+
+procedure TFrmShowMytaobao.RzButton1Click(Sender: TObject);
+begin
+  Self.Close;
+end;
+
+procedure TFrmShowMytaobao.RzURLLabel1Click(Sender: TObject);
+begin
+  //ShellExecute(Handle, 'open', 'Explorer.exe', TaobaoAddres, nil, SW_SHOWNORMAL);
+end;
+
+
+function ShowMessageMyTaobao(ShowStr: string): Integer;
+begin
+  Result := 0;
+
+  FrmShowMytaobao := TFrmShowMytaobao.Create(nil);
+  FrmShowMytaobao.LinkLabel1.caption := ShowStr + #13#10 + #13#10
+  + '如需继续使用，可访问如下淘宝链接：';
+  FrmShowMytaobao.ShowModal;
+end;
+
+end.

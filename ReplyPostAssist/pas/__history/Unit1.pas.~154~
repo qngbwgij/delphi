@@ -1,0 +1,75 @@
+unit Unit1;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, BaseForm, UPublic, Vcl.Menus, CnClasses,
+  CnTrayIcon, Vcl.StdCtrls, RzLabel, RzButton, Vcl.Mask, RzEdit, RzCmboBx,
+  RzPanel, Vcl.ExtCtrls, RzSplit;
+
+type
+  TFrmBaseForm1 = class(TFrmBaseForm)
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  FrmBaseForm1: TFrmBaseForm1;
+
+implementation
+
+{$R *.dfm}
+
+procedure TFrmBaseForm1.FormCreate(Sender: TObject);
+begin
+  inherited;
+  InitializeCriticalSection(InsertIntoTempFIle);
+
+  RealPlanNameList := TStringList.Create;
+  ProxyIPlist := TStringList.Create;
+end;
+
+procedure TFrmBaseForm1.FormDestroy(Sender: TObject);
+var
+  i: Integer;
+  lpStartupInfo: TStartupInfo;
+  lpProcessInformation: TProcessInformation;
+  strExePara: string;
+begin
+  inherited;
+  if finalizationcount = 0 then
+  begin
+    try
+      DeleteCriticalSection(InsertIntoTempFIle);
+
+      RealPlanNameList.Free;
+      ProxyIPlist.Free;
+
+
+      if Restart_Flag then
+      begin
+        FillChar( lpStartupInfo,sizeof(lpStartupInfo),0);
+        FillChar(lpProcessInformation,sizeof(lpProcessInformation),0);
+        lpStartupInfo.cb:=sizeof(lpStartupInfo);
+
+        strExePara := ExtractFilePath(Application.ExeName) + 'DingTie.exe' + ' ' + PlanindexForRestart;
+
+        if CreateProcess(nil,PChar(strExePara),nil,nil,false,0,nil,nil,lpStartupInfo,lpProcessInformation) then
+        begin
+          CloseHandle(lpProcessInformation.hThread);
+          CloseHandle(lpProcessInformation.hProcess);
+        end;
+      end;
+    finally
+      finalizationcount := 1;
+      G_Status := 'Finish Destroy';
+    end;
+  end;
+end;
+
+end.

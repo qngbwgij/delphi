@@ -1,0 +1,36 @@
+unit UConstants;
+
+interface
+  var
+  TaobaoAddres: string =
+  //'https://item.taobao.com/item.htm?spm=a2oq0.12575281.0.0.25911deb9Gt2M7&ft=t&id=607990414103';
+  //'https://tieba.baidu.com/index.html';
+  '';
+
+  ShowMessageMyTaobao_MyInfo1: string =
+  '如需继续使用请联系';// 微信wujiannotliar';
+
+  PemanantShow: string =
+  '， 如有任何疑问请联系';//微信号wujiannotliar';
+
+  PemanantShow_ForTrial: string =
+  '购买正式版';
+  //'，正式版一年20元';
+
+  PemanantShow_ForOfficial: string =
+  '';
+  //'，正式版一年20元';
+
+
+implementation
+
+
+
+
+
+
+
+
+
+
+end.

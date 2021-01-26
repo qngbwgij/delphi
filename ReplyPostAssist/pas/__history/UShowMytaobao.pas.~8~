@@ -1,0 +1,83 @@
+unit UShowMytaobao;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Winapi.ShellAPI, UConstants,
+  Vcl.StdCtrls, RzLabel, RzButton, Vcl.ExtCtrls, RzPanel;
+
+type
+  TFrmShowMytaobao = class(TForm)
+    RzURLLabel1: TRzURLLabel;
+    RzPanel1: TRzPanel;
+    LinkLabel1: TLinkLabel;
+    RzPanel2: TRzPanel;
+    RzButton1: TRzButton;
+    procedure RzURLLabel1Click(Sender: TObject);
+    procedure RzButton1Click(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure RzPanel1MouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure RzPanel1Paint(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  FrmShowMytaobao: TFrmShowMytaobao;
+
+function ShowMessageMyTaobao(ShowStr: string): Integer;
+
+implementation
+
+{$R *.dfm}
+
+procedure TFrmShowMytaobao.FormShow(Sender: TObject);
+begin
+  RzURLLabel1.URL := TaobaoAddres;
+  RzURLLabel1.Caption := TaobaoAddres;
+  RzButton1.Left := RzPanel2.Left + RzPanel2.Width div 2 - RzButton1.Width div 2
+end;
+
+procedure TFrmShowMytaobao.RzButton1Click(Sender: TObject);
+begin
+  Self.Close;
+end;
+
+procedure TFrmShowMytaobao.RzPanel1MouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+    ReleaseCapture;
+    Perform(WM_SYSCOMMAND, $F017, 0);
+end;
+
+procedure TFrmShowMytaobao.RzPanel1Paint(Sender: TObject);
+begin
+    RzPanel1.Canvas.brush.Color := $C0C0C0;
+    RzPanel1.Canvas.FillRect(Bounds(2, 0, 630, 25));
+
+    RzPanel1.Canvas.Font.Color := clWindowText;
+    RzPanel1.Canvas.Font.Style := [fsBold];
+    RzPanel1.Canvas.TextOut(5, 5, 'ÌבÊ¾');
+end;
+
+procedure TFrmShowMytaobao.RzURLLabel1Click(Sender: TObject);
+begin
+  //ShellExecute(Handle, 'open', 'Explorer.exe', TaobaoAddres, nil, SW_SHOWNORMAL);
+end;
+
+
+function ShowMessageMyTaobao(ShowStr: string): Integer;
+begin
+  Result := 0;
+
+  FrmShowMytaobao := TFrmShowMytaobao.Create(nil);
+  FrmShowMytaobao.LinkLabel1.caption := ShowStr + #13#10 + #13#10
+  + ShowMessageMyTaobao_MyInfo1;
+  FrmShowMytaobao.ShowModal;
+end;
+
+end.

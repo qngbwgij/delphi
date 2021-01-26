@@ -1,0 +1,58 @@
+object FormupdateDB: TFormupdateDB
+  Left = 0
+  Top = 0
+  Caption = #26356#26032#23567#24037#20855
+  ClientHeight = 89
+  ClientWidth = 513
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  Position = poMainFormCenter
+  PixelsPerInch = 96
+  TextHeight = 13
+  object RzPanel1: TRzPanel
+    Left = 0
+    Top = 0
+    Width = 513
+    Height = 89
+    Align = alClient
+    TabOrder = 0
+    object RzLabelDay: TRzLabel
+      Left = 340
+      Top = 30
+      Width = 12
+      Height = 13
+      Caption = #22825
+    end
+    object RzButtonUpdate: TRzButton
+      Left = 24
+      Top = 24
+      Width = 137
+      Caption = #20174#26356#26032#28304#26356#26032
+      TabOrder = 0
+      OnClick = RzButtonUpdateClick
+    end
+    object RzButtonintercept: TRzButton
+      Left = 182
+      Top = 24
+      Width = 99
+      Caption = #25130#21462#26368#21518
+      TabOrder = 1
+      OnClick = RzButtoninterceptClick
+    end
+    object RzSpinEditDays: TSpinEdit
+      Left = 287
+      Top = 27
+      Width = 47
+      Height = 22
+      MaxValue = 60
+      MinValue = 1
+      TabOrder = 2
+      Value = 1
+    end
+  end
+end

@@ -1,0 +1,1435 @@
+unit Unit1;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
+  Vcl.AppEvnts, Vcl.OleCtrls, SHDocVw, Vcl.Samples.Spin, System.Actions, Vcl.ActnList,
+  RzEdit, MSHTML, Winapi.ActiveX, Vcl.Clipbrd, UPublic, RzButton, RzPanel,
+  System.RegularExpressions, SQLiteTable3, RzRadChk;
+
+type
+  TFormMain = class(TForm)
+    Button1: TButton;
+    Timer1: TTimer;
+    Button2: TButton;
+    ApplicationEvents1: TApplicationEvents;
+    Button3: TButton;
+    Button4: TButton;
+    Panel1: TPanel;
+    ActionList1: TActionList;
+    Timer_ForDingTie: TTimer;
+    RzMemo_UrlList: TRzMemo;
+    Action1: TAction;
+    RzMemo1: TRzMemo;
+    RzMemo2: TRzMemo;
+    Action_setintervaltime: TAction;
+    Timer2: TTimer;
+    Timer_TextCursorChange: TTimer;
+    RzPanel1: TRzPanel;
+    SpinEdit_hour: TSpinEdit;
+    Label1: TLabel;
+    SpinEdit_minute: TSpinEdit;
+    Label2: TLabel;
+    SpinEdit_second: TSpinEdit;
+    Label3: TLabel;
+    RzButton1: TRzButton;
+    RzButton2: TRzButton;
+    RzButton3: TRzButton;
+    Panel_CEF: TRzPanel;
+    AskInputPoint: TRzCheckBox;
+    AskSubmitPoint: TRzCheckBox;
+    procedure Button1Click(Sender: TObject);
+    procedure Timer1Timer(Sender: TObject);
+    procedure ApplicationEvents1ShortCut(var Msg: TWMKey; var Handled: Boolean);
+    procedure Button3Click(Sender: TObject);
+    procedure Button4Click(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure Action1Execute(Sender: TObject);
+    procedure Button5Click(Sender: TObject);
+    procedure Timer_ForDingTieTimer(Sender: TObject);
+    procedure Action_setintervaltimeExecute(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure Button7Click(Sender: TObject);
+    procedure WebBrowser1NewWindow2(ASender: TObject; var ppDisp: IDispatch; var Cancel: WordBool);
+    procedure Button8Click(Sender: TObject);
+    procedure Button9Click(Sender: TObject);
+    procedure Timer2Timer(Sender: TObject);
+    procedure Button10Click(Sender: TObject);
+    procedure Button11Click(Sender: TObject);
+    procedure Timer_TextCursorChangeTimer(Sender: TObject);
+    procedure Button12Click(Sender: TObject);
+    procedure RzButton1Click(Sender: TObject);
+    procedure RzButton3Click(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure RzButton2Click(Sender: TObject);
+  private
+    { Private declarations }
+    sldb: TSQLiteDatabase;
+    b_isRuning: Boolean;
+    procedure LoadTieZiList;
+    procedure SaveTieZiList;
+    procedure LoadBasicPar;
+    procedure SaveBasicPar;
+
+    procedure SaveInputPlaceEx(o_InputPlaceEx: TPoint);
+    procedure SaveSubmitPlaceEx(o_SubmitPlaceEx: TPoint);
+    procedure SaveOnePoint(tiezi_index: Integer; PointEx: TPoint; strTypes: string);
+
+    procedure GetInputPoint(i_index: Integer; var ReadOutPoint: TPoint);
+
+    function gethtmlsourcecode: string;
+    function RzMemo_UrlListLinesCount: Integer;
+    function GetTieZiIndex: Integer;
+
+    function IsInvalidTieZi: Boolean;
+
+
+
+    //仅做初始化脚本使用
+    function initializationTieZiConfig: Boolean;
+  public
+    { Public declarations }
+
+    procedure ScrolltoBottom;
+    procedure ScrolltoBottomEXE;
+    procedure Delay(dwMilliseconds: DWORD); //Longint
+    function GetPublishContent(tz_index: Integer): string;
+    function GetCoreContent(tz_index: Integer): string;
+    function GetCoreContentForRandomize(sDingTieContList: string): string;
+    function GetCoreContentForSequence(sDingTieContList: string): string;
+
+    function GetWebBrowserHTML(const WebBrowser: TWebBrowser): string;
+
+    function QueryString(sSQL: string): string;
+    function QueryStringEX(sSQL: string;var A: string;var B: string): Boolean;
+  end;
+
+var
+  FormMain: TFormMain;
+  xx, yy: FixedInt;
+
+  GG: Integer = 0;
+  SetFinish: Boolean = False;
+  GlobalClose: Boolean = False;
+  OldCI: HICON;
+  OldCIEX: TCursor;
+
+  b_Debug: Boolean;
+  Submit_Type: string;
+
+
+  strfileName: string = '贴子网址列表.txt';
+
+
+
+  //InputPlace: TPOINT;
+  SubmitPlace: TPoint;
+
+  InputPlaceEx: TPOINT;
+  SubmitPlaceEx: TPoint;
+
+  test_scroll_start: TPOINT;
+  test_scroll_end: TPoint;
+
+
+
+
+
+implementation
+
+{$R *.dfm}
+
+uses
+  main, USetDingTie;
+
+procedure TFormMain.Delay(dwMilliseconds: DWORD);//Longint
+var
+  iStart, iStop: DWORD;
+begin
+  iStart := GetTickCount;
+  repeat
+    iStop := GetTickCount;
+    Application.ProcessMessages;
+  until (iStop - iStart) >= dwMilliseconds;
+end;
+
+function TFormMain.GetWebBrowserHTML(const WebBrowser: TWebBrowser): string;
+var
+  LStream: TStringStream;
+  Stream: IStream;
+  LPersistStreamInit: IPersistStreamInit;
+begin
+  if not Assigned(WebBrowser.Document) then
+    exit;
+  LStream := TStringStream.Create('', TEncoding.UTF8);
+  try
+    LPersistStreamInit := WebBrowser.Document as IPersistStreamInit;
+    Stream := TStreamAdapter.Create(LStream, soReference);
+    LPersistStreamInit.Save(Stream, true);
+    result := LStream.DataString;
+  finally
+    LStream.Free();
+  end;
+end;
+
+function TFormMain.initializationTieZiConfig: Boolean;
+var
+  slDBpath: string;
+  sltb: TSQLIteTable;
+  sSQL: String;
+  Notes: String;
+
+  i: Integer;
+begin
+  Result := True;
+
+  slDBPath := ExtractFilepath(application.exename)
+  + 'KS.db3';
+  sldb := TSQLiteDatabase.Create(slDBPath);
+  try
+    sldb.BeginTransaction;
+    try
+      for I := 0 to 399 do
+      begin
+        sSQL := 'insert INTO DingTie_Config (tiezi_index) VALUES (' + IntToStr(I) + ')';
+        sldb.ExecSQL(sSQL);
+      end;
+
+    finally
+      sldb.Commit;
+    end;
+  finally
+    sldb.Free;
+  end;
+end;
+
+function TFormMain.IsInvalidTieZi: Boolean;
+var
+  s_Pattern1, s_Pattern2: string;
+  s_Content: string;
+begin
+   s_Pattern1 := '<div id="errorText">';
+   s_Pattern2 := '很抱歉，该贴已被删除';
+
+   s_Content := gethtmlsourcecode;
+
+   if (Pos(s_Pattern1, s_Content) > 0)
+   and (Pos(s_Pattern2, s_Content) > 0) then
+     Result := True
+   else
+     Result := False;
+
+
+
+//   if TRegEx.IsMatch(gethtmlsourcecode, s_Pattern1) then
+//     Result := True
+//   else
+//     Result := False;
+end;
+
+procedure TFormMain.LoadBasicPar;
+var
+  slDBpath: string;
+  sltb: TSQLIteTable;
+  sSQL: String;
+begin
+  slDBPath := ExtractFilepath(application.exename)
+  + 'KS.db3';
+  sldb := TSQLiteDatabase.Create(slDBPath);
+  try
+//    sltb := sldb.GetTable('select * from SavedPoint t where t.point_type=''InputPlace''');
+//    try
+//      if sltb.Count > 0 then
+//      begin
+//        InputPlace.X := StrToInt(sltb.FieldAsString(sltb.FieldIndex['point_x']));
+//        InputPlace.Y := StrToInt(sltb.FieldAsString(sltb.FieldIndex['point_y']));
+//        //InputPlace.Y := sltb.FieldAsInteger(sltb.FieldIndex['point_y']);
+//      end;
+//    finally
+//      sltb.Free;
+//    end;
+
+    sltb := sldb.GetTable('select * from SavedPoint t where t.point_type=''SubmitPlace''');
+    try
+      if sltb.Count > 0 then
+      begin
+//        SubmitPlace.X := sltb.FieldAsInteger(sltb.FieldIndex['point_x']);
+//        SubmitPlace.Y := sltb.FieldAsInteger(sltb.FieldIndex['point_y']);
+
+        SubmitPlace.X := StrToInt(sltb.FieldAsString(sltb.FieldIndex['point_x']));
+        SubmitPlace.Y := StrToInt(sltb.FieldAsString(sltb.FieldIndex['point_y']));
+      end;
+    finally
+      sltb.Free;
+    end;
+
+    sltb := sldb.GetTable('select * from SavedPoint t where t.point_type=''test_scroll_start''');
+    try
+      if sltb.Count > 0 then
+      begin
+//        test_scroll_start.X := sltb.FieldAsInteger(sltb.FieldIndex['point_x']);
+//        test_scroll_start.Y := sltb.FieldAsInteger(sltb.FieldIndex['point_y']);
+
+        test_scroll_start.X := StrToInt(sltb.FieldAsString(sltb.FieldIndex['point_x']));
+        test_scroll_start.Y := StrToInt(sltb.FieldAsString(sltb.FieldIndex['point_y']));
+      end;
+    finally
+      sltb.Free;
+    end;
+
+    sltb := sldb.GetTable('select * from SavedPoint t where t.point_type=''test_scroll_end''');
+    try
+      if sltb.Count > 0 then
+      begin
+//        test_scroll_end.X := sltb.FieldAsInteger(sltb.FieldIndex['point_x']);
+//        test_scroll_end.Y := sltb.FieldAsInteger(sltb.FieldIndex['point_y']);
+
+        test_scroll_end.X := StrToInt(sltb.FieldAsString(sltb.FieldIndex['point_x']));
+        test_scroll_end.Y := StrToInt(sltb.FieldAsString(sltb.FieldIndex['point_y']));
+      end;
+    finally
+      sltb.Free;
+    end;
+
+  finally
+    sldb.Free;
+  end;
+
+  b_Debug := QueryString('select b_Debug from SystemInfo') = '1';
+
+  Submit_Type := QueryString('select Submit_Type from SystemInfo');
+
+  AskInputPoint.Checked := QueryString('select AskInputPoint from SystemInfo') = '-1';
+
+  AskSubmitPoint.Checked := QueryString('select AskSubmitPoint from SystemInfo') = '-1';
+
+
+  SpinEdit_hour.Value := StrToInt(QueryString('select TaskInterval_H from SystemInfo'));
+  SpinEdit_minute.Value := StrToInt(QueryString('select TaskInterval_M from SystemInfo'));
+  SpinEdit_second.Value := StrToInt(QueryString('select TaskInterval_S from SystemInfo'));
+end;
+
+procedure TFormMain.LoadTieZiList;
+var
+  F: TextFile;
+  i: integer;
+  fileStr: string;
+begin
+  if FileExists(strfileName) then
+  begin
+    AssignFile(F, strfileName); //把一个外部文件名和一个文件变量相关联
+    try
+
+      Reset(F); //为读打开文件并把文件指针移动到文件首? ? ? ?
+      while not Eof(F) do
+      begin
+        ReadLn(F, fileStr); //从文本文件中读取信息
+        RzMemo_UrlList.Lines.Add(fileStr);
+      end;
+
+    finally
+      CloseFile(F); //关闭文件
+    end;
+  end;
+
+end;
+
+function TFormMain.QueryString(sSQL: string): string;
+var
+  slDBpath: string;
+  sltb: TSQLIteTable;
+begin
+  slDBPath := ExtractFilepath(application.exename)
+  + 'KS.db3';
+  sldb := TSQLiteDatabase.Create(slDBPath);
+  try
+    sltb := sldb.GetTable(sSQL);
+    try
+      if sltb.Count <= 0 then
+        raise Exception.Create('查询SQL语句未查出结果：' + #13#10 + sSQL);
+
+
+        Result := sltb.FieldAsString(0);
+
+    finally
+      sltb.Free;
+    end;
+  finally
+    sldb.Free;
+  end;
+end;
+
+function TFormMain.QueryStringEX(sSQL: string; var A, B: string): Boolean;
+var
+  slDBpath: string;
+  sltb: TSQLIteTable;
+begin
+  Result := False;
+
+  slDBPath := ExtractFilepath(application.exename)
+  + 'KS.db3';
+  sldb := TSQLiteDatabase.Create(slDBPath);
+  try
+    sltb := sldb.GetTable(sSQL);
+    try
+      if sltb.Count <= 0 then
+        raise Exception.Create('查询SQL语句未查出结果：' + #13#10 + sSQL);
+
+
+        A := sltb.FieldAsString(0);
+        B := sltb.FieldAsString(1);
+
+    finally
+      sltb.Free;
+    end;
+  finally
+    sldb.Free;
+  end;
+
+  Result := true;
+end;
+
+procedure TFormMain.RzButton1Click(Sender: TObject);
+begin
+  Action1.Execute;
+
+  Timer_ForDingTie.Enabled := true;
+end;
+
+procedure TFormMain.RzButton2Click(Sender: TObject);
+begin
+  if not b_isRuning then
+    Exit;
+
+  GlobalClose := True;
+  Timer_ForDingTie.Enabled := False;
+end;
+
+procedure TFormMain.RzButton3Click(Sender: TObject);
+begin
+  i_tiezi_index := GetTieZiIndex;
+
+  if not Assigned(FormSetDingTie) then
+  begin
+    FormSetDingTie := TFormSetDingTie.Create(Application);
+  end;
+  FormSetDingTie.Position := poMainFormCenter;
+  FormSetDingTie.ShowModal;
+end;
+
+function TFormMain.RzMemo_UrlListLinesCount: Integer;
+var
+  i: Integer;
+  i_count: Integer;
+begin
+  Result := 0;
+  if RzMemo_UrlList.Lines.Count < 1 then
+    Exit;
+
+  i_count := 0;
+  for I := 0 to RzMemo_UrlList.Lines.Count - 1 do
+  begin
+    if Trim(RzMemo_UrlList.Lines.Strings[i]) <> '' then
+      Inc(i_count);
+  end;
+
+  if i_count = 0 then
+    Exit;
+  Result := i_count;
+end;
+
+procedure TFormMain.Action1Execute(Sender: TObject);
+var
+  i: Integer;
+  Existss: Boolean;
+  SourceText: string;
+  PasteContent: string;
+  n: Integer;
+  arr: array[0..255] of Char;
+  oldHtmlSourceCode: string;
+  submittype: Integer;
+begin
+  b_isRuning := True;
+  try
+    if GlobalClose then
+    begin
+      GlobalClose := False;
+      Exit;
+    end;
+
+    submittype := StrToInt(QueryString('SELECT Submit_Type FROM SystemInfo'));
+
+    RzMemo1.Lines.Add(#13#10#13#10#13#10 + '●●●●●●第' + IntToStr(Action1.Tag) + '次工作开始');
+    Delay(2000);
+    try
+
+      for i := 0 to RzMemo_UrlList.Lines.Count - 1 do
+      begin
+        if GlobalClose then
+        begin
+          GlobalClose := False;
+          Exit;
+        end;
+
+        RzMemo1.Lines.Add(#13#10#13#10 + '●●●开始第' + IntToStr(i + 1) + '个URL处理');
+        Delay(2000);
+
+        if GlobalClose then
+        begin
+          GlobalClose := False;
+          Exit;
+        end;
+
+        try
+          if Trim(RzMemo_UrlList.Lines[i]) = '' then
+          begin
+            RzMemo1.Lines.Add('贴子链接为空，跳过！' + '↑↑↑↑↑↑');
+            Delay(2000);
+            Continue;
+          end;
+
+          if GlobalClose then
+          begin
+            GlobalClose := False;
+            Exit;
+          end;
+
+
+          PasteContent := GetPublishContent(i);
+          Clipboard.SetTextBuf(PChar(PasteContent));
+          if b_Debug then RzMemo1.Lines.Add('设置剪切板内容' + #13#10 + PasteContent);
+
+
+          RzMemo1.Lines.Add('打开第' + IntToStr(i+1) + '个贴子链接');
+          Delay(2000);
+          //if Pos(Trim(RzMemo_UrlList.Lines[i]), Trim(MainForm.edAddress.Text)) < 1 then
+          MainForm.crm.Browser.MainFrame.LoadUrl(Trim(RzMemo_UrlList.Lines[i]));
+          if b_Debug then RzMemo1.Lines.Add('打开链接完毕');
+
+          if GlobalClose then
+          begin
+            GlobalClose := False;
+            Exit;
+          end;
+          if b_Debug then RzMemo1.Lines.Add('全局关闭判定为不关闭');
+
+
+          if b_Debug then RzMemo1.Lines.Add('请肉眼判定当前打开的网址是不是对应的贴子链接，5秒等待');
+          Delay(5000);
+
+          RzMemo1.Lines.Add('开始判定贴子链接的有效性！');
+          if IsInvalidTieZi then
+          begin
+            RzMemo1.Lines.Add('无效贴子链接，跳过！' + '↑↑↑↑↑↑');
+            Delay(2000);
+            Continue;
+          end;
+          if b_Debug then RzMemo1.Lines.Add('第' + IntToStr(i+1) + '个贴子链接' + '为有效链接');
+
+          if GlobalClose then
+          begin
+            GlobalClose := False;
+            Exit;
+          end;
+          if b_Debug then RzMemo1.Lines.Add('全局关闭判定为不关闭');
+
+
+          //ScrolltoBottom;
+          ScrolltoBottomEXE;
+          if b_Debug then RzMemo1.Lines.Add('成功滚到底层');
+          Delay(500);
+
+          RzMemo1.Lines.Add('即将输入顶贴内容');
+          GetInputPoint(i, InputPlaceEx);
+          SetCursorPos(InputPlaceEx.x, InputPlaceEx.y);
+          Delay(5000);
+          if AskInputPoint.Checked then
+          begin
+            if MessageBox(self.Handle, '是否要退出工作修改输入点？', '提示', MB_OKCANCEL)= IDOK then
+            begin
+              Timer_ForDingTie.Enabled := False;
+              Exit;
+            end;
+          end;
+
+
+          mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0); //模拟按下鼠标左键。
+          mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0); //模拟放开鼠标左键。
+          Delay(500);
+          mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0); //模拟按下鼠标左键。
+          mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0); //模拟放开鼠标左键。
+          Delay(500);
+          mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0); //模拟按下鼠标左键。
+          mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0); //模拟放开鼠标左键。
+          mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0); //模拟按下鼠标左键。
+          mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0); //模拟放开鼠标左键。
+
+          if b_Debug then RzMemo1.Lines.Add('鼠标已成功进入所设置的输入区域，开始粘贴！');
+
+          Delay(500);
+
+          Clipboard.GetTextBuf(arr, Length(arr));
+
+          keybd_event(VK_CONTROL, MapVirtualKey(VK_CONTROL, 0), 0, 0); //按下SHIFT键。
+          keybd_event(Ord('V'), MapVirtualKey(Ord('V'), 0), 0, 0); //按下R键。
+          keybd_event(Ord('V'), MapVirtualKey(Ord('V'), 0), KEYEVENTF_KEYUP, 0); //按下R键。
+          keybd_event(VK_CONTROL, MapVirtualKey(VK_CONTROL, 0), KEYEVENTF_KEYUP, 0);
+
+          if b_Debug then RzMemo1.Lines.Add('粘贴内容为：' + arr + #13#10 + '粘贴完毕！');
+
+
+          if GlobalClose then
+          begin
+            GlobalClose := False;
+            Exit;
+          end;
+
+          RzMemo1.Lines.Add('即将提交！');
+          Delay(2000);
+
+
+
+
+
+          case submittype of      //字典ID为：1
+          0:
+            begin
+              Button11Click(nil);
+            end;
+          1:
+            begin
+              SetCursorPos(SubmitPlace.x, SubmitPlace.y);
+              Delay(5000);
+
+              if AskSubmitPoint.Checked then
+              begin
+                if MessageBox(self.Handle, '是否要退出工作修改提交点？', '提示', MB_OKCANCEL)= IDOK then
+                begin
+                  Timer_ForDingTie.Enabled := False;
+                  Exit;
+                end
+                else
+                begin
+                  SetCursorPos(SubmitPlace.x, SubmitPlace.y);
+                  Delay(1000);
+                end;
+              end;
+
+              if OldCI = HICON(65567) then
+              begin
+                if b_Debug then RzMemo1.Lines.Add('确认了是手形鼠标指针！');
+
+                mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0); //模拟按下鼠标左键。
+                mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0); //模拟放开鼠标左键。
+                mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0); //模拟按下鼠标左键。
+                mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0); //模拟放开鼠标左键。
+                mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0); //模拟按下鼠标左键。
+                mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0); //模拟放开鼠标左键。
+                mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0); //模拟按下鼠标左键。
+                mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0); //模拟放开鼠标左键。
+                if b_Debug then RzMemo1.Lines.Add('手形状态按提交提交按扭完成！');
+
+                //Exit;
+
+                //RzMemo1.Lines.Add('即将等待20秒');
+              end
+              else
+              begin
+                if b_Debug then RzMemo1.Lines.Add('确认了不是手形鼠标指针！');
+
+                Button10Click(nil);
+                if b_Debug then RzMemo1.Lines.Add('JS按提交提交按扭完成！');
+              end;
+
+
+
+            end;
+          2:
+            begin
+              Button10Click(nil);
+            end;
+          end;
+
+
+          Delay(2000);
+          if GlobalClose then
+          begin
+            GlobalClose := False;
+            Exit;
+          end;
+
+
+
+
+  //        Existss := False;
+  //        n := 0;
+  //        repeat
+  //          if GlobalClose then
+  //          begin
+  //            GlobalClose := False;
+  //            Exit;
+  //          end;
+  //
+  //          Inc(n);
+  //          RzMemo1.Lines.Add('第' + IntToStr(n) + '次提交即将开始');
+  //
+  //          RzMemo1.Lines.Add('即将按提交提交按扭！');
+  //          Delay(5000);
+  //
+  //
+  //          SetCursorPos(SubmitPlace.x, SubmitPlace.y);
+  //          Delay(1000);
+  //
+  //      //if Screen.Cursor = crHourGlass then
+  //          if OldCI = HICON(65567) then
+  //          begin
+  //            RzMemo1.Lines.Add('确认了是手形鼠标指针！');
+  //            mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0); //模拟按下鼠标左键。
+  //            mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0); //模拟放开鼠标左键。
+  //            mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0); //模拟按下鼠标左键。
+  //            mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0); //模拟放开鼠标左键。
+  //            mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0); //模拟按下鼠标左键。
+  //            mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0); //模拟放开鼠标左键。
+  //            mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0); //模拟按下鼠标左键。
+  //            mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0); //模拟放开鼠标左键。
+  //            RzMemo1.Lines.Add('按提交提交按扭完成！');
+  //
+  //            Exit;
+  //
+  //            RzMemo1.Lines.Add('即将等待20秒');
+  //          end
+  //          else
+  //          begin
+  //            RzMemo1.Lines.Add('确认了不是手形鼠标指针！');
+  //            Button10Click(nil);
+  //            RzMemo1.Lines.Add('JS按提交提交按扭完成！');
+  //            Exit;
+  //          end;
+  //
+  //          Delay(20000);
+  //
+  //          RzMemo1.Lines.Add('即将判断是否提交成功，并置入网页源码');
+  //          ScrolltoBottom;
+  //          RzMemo1.Lines.Add('等待新获取网页源码');
+  //          SourceText := gethtmlsourcecode;
+  //          RzMemo1.Lines.Add('获取新网页源码成功！');
+  //          RzMemo2.Text := PasteContent + #13#10 + #13#10 + #13#10 + SourceText;
+  //
+  //          if Pos(PasteContent, SourceText) > 0 then
+  //        //if oldHtmlSourceCode <> SourceText  then
+  //
+  //          begin
+  //            RzMemo1.Lines.Add('提交成功，即将退出');
+  //            Delay(1000);
+  //
+  //            Existss := True;
+  //
+  //            Break;
+  //          end
+  //          else
+  //          begin
+  //            Button10Click(nil);
+  //            Delay(1000);
+  //            RzMemo1.Lines.Add('JS提交成功，即将退出');
+  //            Existss := True;
+  //            Break;
+  //          end;
+  //
+  //          Delay(1000);
+  //          RzMemo1.Lines.Add('提交失败，即将判断GG是否为0');
+  //          if GG <> 0 then
+  //          begin
+  //            RzMemo1.Lines.Add('GG不为0，即将退出');
+  //            Existss := True;
+  //            Break;
+  //          end;
+  //
+  //          Delay(1000);
+  //          RzMemo1.Lines.Add('GG为0，即将判断总循环次数是否为10');
+  //          if n = 10 then
+  //          begin
+  //            RzMemo1.Lines.Add('总循环次数为10，即将退出');
+  //            Existss := True;
+  //            Break;
+  //          end;
+  //
+  //          RzMemo1.Lines.Add('即将休息五秒，判定要不要继续循环');
+  //
+  //          if GlobalClose then
+  //          begin
+  //            GlobalClose := False;
+  //            Exit;
+  //          end;
+  //          Delay(5000);
+  //        until Existss;
+  //
+  //        Delay(1000);
+        finally
+          RzMemo1.Lines.Add('●●●结束第' + IntToStr(i + 1) + '个URL处理');
+        end;
+      end;
+
+    finally
+
+      RzMemo1.Lines.Add('●●●●●●第' + IntToStr(Action1.Tag) + '次工作结束');
+      Action1.Tag := Action1.Tag + 1;
+    end;
+
+    if GlobalClose then
+    begin
+      GlobalClose := False;
+      Exit;
+    end;
+
+  finally
+    b_isRuning := False;
+  end;
+end;
+
+procedure TFormMain.Action_setintervaltimeExecute(Sender: TObject);
+begin
+  Timer_ForDingTie.Interval := SpinEdit_hour.Value * 60 * 60 * 1000 + SpinEdit_minute.Value * 60 * 1000 + SpinEdit_second.Value * 1000;
+end;
+
+procedure TFormMain.ApplicationEvents1ShortCut(var Msg: TWMKey; var Handled: Boolean);
+begin
+  if (Msg.CharCode = VK_F1) then
+  begin
+    GetCursorPos(InputPlaceEx);
+    SaveInputPlaceEx(InputPlaceEx);
+    ShowMessage('succeed to save input_position!');
+    Handled := True;
+  end
+  else if (Msg.CharCode = VK_F2) then
+  begin
+    GetCursorPos(SubmitPlaceEx);
+    SaveSubmitPlaceEx(SubmitPlaceEx);
+    ShowMessage('succeed to save submit_position!');
+    Handled := True;
+  end
+  else if (Msg.CharCode = VK_F3) then
+  begin
+    if b_isRuning then
+    begin
+      GlobalClose := True;
+      Timer_ForDingTie.Enabled := False;
+      ShowMessage('succeed to quit!');
+      Handled := True;
+    end;
+  end
+  else if (Msg.CharCode = VK_F4) then
+  begin
+    RzMemo_UrlList.Lines.Add(Trim(MainForm.edAddress.Text));
+
+    Handled := True;
+  end
+  else if (Msg.CharCode = VK_F5) then
+  begin
+    GetCursorPos(test_scroll_start);
+    ShowMessage('succeed to save start point!');
+    Handled := True;
+  end
+  else if (Msg.CharCode = VK_F6) then
+  begin
+    GetCursorPos(test_scroll_end);
+    ShowMessage('succeed to save end point!');
+    Handled := True;
+  end;
+   {
+      test_scroll_start: TPOINT;
+  test_scroll_end: TPoint;
+   }
+end;
+
+procedure TFormMain.Button10Click(Sender: TObject);
+begin
+  MainForm.ExeJs('document.getElementsByClassName("ui_btn ui_btn_m j_submit poster_submit")[0].click()');
+
+
+  //<a href="#" class="ui_btn ui_btn_m j_submit poster_submit" title="Ctrl+Enter快捷发表"><span><em>发 表</em></span></a>
+end;
+
+procedure TFormMain.Button11Click(Sender: TObject);
+begin
+  MainForm.crm.SetFocus;
+  keybd_event(VK_CONTROL, MapVirtualKey(VK_CONTROL, 0), 0, 0); //按下SHIFT键。
+  keybd_event(VK_RETURN, MapVirtualKey(VK_RETURN, 0), 0, 0); //按下R键。
+
+  keybd_event(VK_RETURN, MapVirtualKey(VK_RETURN, 0), KEYEVENTF_KEYUP, 0); //放开R键。
+  keybd_event(VK_CONTROL, MapVirtualKey(VK_CONTROL, 0), KEYEVENTF_KEYUP, 0); //放开SHIFT键。
+end;
+
+procedure TFormMain.Button12Click(Sender: TObject);
+var
+  PerDuan: Integer;
+  TotalDuan: Integer;
+  i: Integer;
+begin
+
+   {
+      test_scroll_start: TPOINT;
+  test_scroll_end: TPoint;
+   }
+  TotalDuan := 20;
+  PerDuan := (test_scroll_end.Y - test_scroll_start.y) div TotalDuan;
+
+  //PerDuan := (MainForm.crm.Height) div TotalDuan;
+
+
+  SetCursorPos(test_scroll_start.x, test_scroll_start.y);
+  mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0); //模拟按下鼠标左键。
+  mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0); //模拟按下鼠标左键。
+
+
+  for I := 1 to TotalDuan do
+  begin
+
+    Delay(500);
+    SetCursorPos(test_scroll_start.x, test_scroll_start.y + i*PerDuan);
+    mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0); //模拟按下鼠标左键。
+    mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0); //模拟按下鼠标左键。
+
+    Delay(500);
+    mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0); //模拟放开鼠标左键。
+  end;
+
+  Delay(500);
+  SetCursorPos(test_scroll_start.x, test_scroll_end.y);
+  mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0); //模拟按下鼠标左键。
+  mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0); //模拟按下鼠标左键。
+
+
+
+
+
+
+
+
+
+
+
+  Delay(1000);
+  mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0); //模拟放开鼠标左键。
+end;
+
+procedure TFormMain.Button1Click(Sender: TObject);
+var
+  oldPoint: TPOINT;
+  i: Integer;
+begin
+
+  GetCursorPos(oldPoint); //保存当前鼠标位置。
+  xx := oldPoint.x;
+  yy := oldPoint.y;
+  //Timer1.Enabled := true;
+
+
+  self.WindowState := wsminimized;
+
+//  mouse_event(MOUSEEVENTF_RIGHTDOWN,0,0,0,0);//模拟按下鼠标右键。
+//
+//  mouse_event(MOUSEEVENTF_RIGHTUP,0,0,0,0);//模拟放开鼠标右键。
+//
+//  mouse_event(MOUSEEVENTF_LEFTDOWN,0,0,0,0);//模拟按下鼠标左键。
+//  mouse_event(MOUSEEVENTF_LEFTUP,0,0,0,0);//模拟放开鼠标左键。
+//
+//  keybd_event(VK_SHIFT,MapVirtualKey(VK_SHIFT,0),0,0); //按下SHIFT键。
+//  keybd_event(0x52,MapVirtualKey(0x52,0),0,0);//按下R键。
+//
+//  keybd_event(0x52,MapVirtualKey(0x52,0),KEYEVENTF_KEYUP,0);//放开R键。
+//  keybd_event(VK_SHIFT,MapVirtualKey(VK_SHIFT,0),KEYEVENTF_KEYUP,0);//放开SHIFT键。
+//
+//  SetCursorPos(oldPoint.x,oldPoint.y);
+end;
+
+procedure TFormMain.Button3Click(Sender: TObject);
+begin
+//  WebBrowser1.Navigate('www.baidu.com');
+end;
+
+procedure TFormMain.Button4Click(Sender: TObject);
+begin
+//  WebBrowser1.Navigate('https://tieba.baidu.com/p/6204244477');
+end;
+
+procedure TFormMain.Button5Click(Sender: TObject);
+begin
+  Action1.Execute;
+
+  Timer_ForDingTie.Enabled := true;
+end;
+
+procedure TFormMain.Button7Click(Sender: TObject);
+begin
+  if not Assigned(FormSetDingTie) then
+  begin
+    FormSetDingTie := TFormSetDingTie.Create(Application);
+  end;
+
+  FormSetDingTie.Show;
+end;
+
+procedure TFormMain.Button8Click(Sender: TObject);
+begin
+  ScrolltoBottom;
+end;
+
+procedure TFormMain.Button9Click(Sender: TObject);
+begin
+  RzMemo2.Text := gethtmlsourcecode;
+end;
+
+procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  SaveTieZiList;
+  SaveBasicPar;
+end;
+
+procedure TFormMain.FormCreate(Sender: TObject);
+begin
+  ListForRandomize := TStringList.Create;
+  ListForQuence := TStringList.Create;
+  ListForFixTime := TStringList.Create;
+end;
+
+procedure TFormMain.FormDestroy(Sender: TObject);
+var
+  i: Integer;
+begin
+  ListForRandomize.Free; //: TStringList;
+  ListForQuence.Free; //: TStringList;
+
+  for i := ListForFixTime.Count - 1 downto 0 do
+  begin
+    if Assigned(ListForFixTime.Objects[i]) then
+      ListForFixTime.Objects[i].Free;
+    ListForFixTime.Delete(i);
+  end;
+
+end;
+
+procedure TFormMain.FormShow(Sender: TObject);
+begin
+  Self.WindowState := wsMaximized;
+  MainForm.BorderStyle := bsNone;
+  MainForm.Parent := Panel_CEF;
+  MainForm.Align := alClient;
+  MainForm.Show;
+
+  RzMemo2.Height := 400;
+
+  LoadTieZiList; //RzMemo_UrlList
+
+  if (RzMemo_UrlList.Lines.Count > 0) and (Trim(RzMemo_UrlList.Lines[0]) <> '') then
+    MainForm.crm.Browser.MainFrame.LoadUrl(Trim(RzMemo_UrlList.Lines[0]))
+  else
+    MainForm.crm.Browser.MainFrame.LoadUrl(MainForm.edAddress.Text);
+
+  LoadBasicPar;
+
+  with TMyThread.Create(True) do
+  begin
+    FreeOnTerminate := True;
+    Resume;
+  end;
+end;
+
+function TFormMain.GetCoreContent(tz_index: Integer): string;
+var
+  ChoosedContentType_index: string;
+  DingTie_ContentList: string;
+  sSQL: string;
+begin
+  sSQL := 'SELECT dingtie_type, dingtie_content FROM DingTie_Config  where tiezi_index=' + IntToStr(tz_index);
+
+  QueryStringEX(sSQL, ChoosedContentType_index, DingTie_ContentList);
+  case StrToInt(ChoosedContentType_index) of
+    0:
+      begin
+        Result := DingTie_ContentList;
+      end;
+    1:
+      begin
+        Result := GetCoreContentForRandomize(DingTie_ContentList);
+      end;
+    2:
+      begin
+        Result := GetCoreContentForSequence(DingTie_ContentList);
+      end;
+    3:
+      begin
+
+      end;
+    4:
+      begin
+
+      end;
+
+  end;
+end;
+
+function TFormMain.GetCoreContentForRandomize(sDingTieContList: string): string;
+var
+  i: Integer;
+
+  itemcout: Integer;
+  LinshiList: TStringList;
+begin
+  LinshiList := TStringList.Create;
+  try
+    LinshiList.Text := sDingTieContList;
+    itemcout := LinshiList.Count;
+
+
+    Randomize;
+    i := Random(itemcout);
+    Result := LinshiList.Strings[i];
+  finally
+    LinshiList.Free;
+  end;
+end;
+
+function TFormMain.GetCoreContentForSequence(sDingTieContList: string): string;
+var
+  i, i_mod: Integer;
+
+  itemcout: Integer;
+  LinshiList: TStringList;
+begin
+  LinshiList := TStringList.Create;
+  try
+    LinshiList.Text := sDingTieContList;
+    itemcout := LinshiList.Count;
+
+
+    i_mod := Action1.Tag mod itemcout;
+
+    if i_mod = 0 then
+      i := itemcout - 1
+    else
+      i := i_mod - 1;
+
+
+    Result := LinshiList.Strings[i];
+  finally
+    LinshiList.Free;
+  end;
+end;
+end;
+
+function TFormMain.gethtmlsourcecode: string;
+begin
+  MainForm.GetWebBrowserHTMLEXE;
+
+  while True do
+  begin
+    Delay(1000);
+    if FinishGetHtmlSource then
+    begin
+      FinishGetHtmlSource := False;
+      Result := GHtmlSource;
+      GHtmlSource := '';
+      Break;
+    end;
+  end;
+end;
+
+procedure TFormMain.GetInputPoint(i_index: Integer; var ReadOutPoint: TPoint);
+var
+  ReadOutPointX, ReadOutPointY: string;
+begin
+  QueryStringEX('SELECT InputPlace_x, InputPlace_y FROM DingTie_Config where tiezi_index=' + IntToStr(i_index), ReadOutPointX, ReadOutPointY);
+  ReadOutPoint.X := StrToInt(ReadOutPointX);
+  ReadOutPoint.Y := StrToInt(ReadOutPointY);
+end;
+
+function TFormMain.GetPublishContent(tz_index: Integer): string;
+begin
+  Result := GetCoreContent(tz_index);
+end;
+
+function TFormMain.GetTieZiIndex: Integer;
+var
+  RzMemo_UrlListLine, RzMemo_UrlListLineCount: Integer;
+begin
+  try
+    Result := -1;
+
+
+
+    RzMemo_UrlListLine := RzMemo_UrlList.Line;
+    RzMemo_UrlListLineCount := RzMemo_UrlListLinesCount;
+
+    if RzMemo_UrlListLineCount < 1 then
+      Exit;
+
+
+    if Trim(RzMemo_UrlList.Lines[RzMemo_UrlListLine - 1]) = ''  then
+      Exit;
+
+
+    Result := RzMemo_UrlListLine - 1;
+  except
+
+  end;
+end;
+
+procedure TFormMain.SaveBasicPar;
+var
+  slDBpath: string;
+  sltb: TSQLIteTable;
+  sSQL: String;
+begin
+  slDBPath := ExtractFilepath(application.exename)
+  + 'KS.db3';
+  sldb := TSQLiteDatabase.Create(slDBPath);
+  try
+    sldb.BeginTransaction;
+    try
+//      sSQL := 'UPDATE SavedPoint set point_x=' + IntToStr(InputPlace.X)
+//         + ', point_y=' + IntToStr(InputPlace.Y) + ' where point_type=''InputPlace''';
+//      sldb.ExecSQL(sSQL);
+
+      sSQL := 'UPDATE SavedPoint set point_x=' + IntToStr(SubmitPlace.X)
+         + ', point_y=' + IntToStr(SubmitPlace.Y) + ' where point_type=''SubmitPlace''';
+      sldb.ExecSQL(sSQL);
+
+      sSQL := 'UPDATE SavedPoint set point_x=' + IntToStr(test_scroll_start.X)
+         + ', point_y=' + IntToStr(test_scroll_start.Y) + ' where point_type=''test_scroll_start''';
+      sldb.ExecSQL(sSQL);
+
+      sSQL := 'UPDATE SavedPoint set point_x=' + IntToStr(test_scroll_end.X)
+         + ', point_y=' + IntToStr(test_scroll_end.Y) + ' where point_type=''test_scroll_end''';
+      sldb.ExecSQL(sSQL);
+
+      sSQL := 'UPDATE SystemInfo set TaskInterval_H=' + IntToStr(SpinEdit_hour.Value)
+         + ', TaskInterval_M=' + IntToStr(SpinEdit_minute.Value)
+         + ', TaskInterval_S=' + IntToStr(SpinEdit_second.Value)
+         + ', AskInputPoint=' + BoolToStr(AskInputPoint.Checked)
+         + ', AskSubmitPoint=' + BoolToStr(AskSubmitPoint.Checked);
+
+      sldb.ExecSQL(sSQL);
+
+
+      sSQL := 'UPDATE SavedPoint set point_x=' + IntToStr(test_scroll_end.X)
+         + ', point_y=' + IntToStr(test_scroll_end.Y) + ' where point_type=''test_scroll_end''';
+      sldb.ExecSQL(sSQL);
+
+
+
+
+    finally
+      sldb.Commit;
+    end;
+  finally
+    sldb.Free;
+  end;
+end;
+
+procedure TFormMain.SaveInputPlaceEx(o_InputPlaceEx: TPoint);
+var
+  slDBpath: string;
+  sSQL: String;
+  i: Integer;
+
+begin
+  i_tiezi_index := GetTieZiIndex;
+
+  slDBPath := ExtractFilepath(application.exename)
+  + 'KS.db3';
+  sldb := TSQLiteDatabase.Create(slDBPath);
+  try
+    sldb.BeginTransaction;
+    try
+
+      if i_tiezi_index = -1 then
+      begin
+        for I := 0 to TieZi_MaxCount - 1 do
+        begin
+          SaveOnePoint(i_tiezi_index, o_InputPlaceEx, 'InputPlace');
+        end;
+      end
+      else
+      begin
+        SaveOnePoint(i_tiezi_index, o_InputPlaceEx, 'InputPlace');
+      end;
+
+
+    finally
+      sldb.Commit;
+    end;
+  finally
+    sldb.Free;
+  end;
+
+
+end;
+
+procedure TFormMain.SaveOnePoint(tiezi_index: Integer; PointEx: TPoint;
+  strTypes: string);
+var
+  sSQL: AnsiString;
+  P_sSQL: PAnsiChar;
+begin
+  if strTypes = 'InputPlace' then
+    sSQL := 'update DingTie_Config set InputPlace_x=' + IntToStr(PointEx.X)
+    + ', InputPlace_y=' + IntToStr(PointEx.Y) + ' where tiezi_index=' + IntToStr(tiezi_index)
+  else
+  if strTypes = 'SubmitPlace' then
+    sSQL := 'update DingTie_Config set SubmitPlace_x=' + IntToStr(PointEx.X)
+    + ', SubmitPlace_y=' + IntToStr(PointEx.Y) + ' where tiezi_index=' + IntToStr(tiezi_index)
+  else
+    raise Exception.Create('不存的点类型！');
+
+  P_sSQL := PAnsiChar(sSQL);
+  sldb.ExecSQL(P_sSQL);
+end;
+
+procedure TFormMain.SaveSubmitPlaceEx(o_SubmitPlaceEx: TPoint);
+var
+  slDBpath: string;
+  sSQL: String;
+  i: Integer;
+
+begin
+  i_tiezi_index := GetTieZiIndex;
+
+  slDBPath := ExtractFilepath(application.exename)
+  + 'KS.db3';
+  sldb := TSQLiteDatabase.Create(slDBPath);
+  try
+    sldb.BeginTransaction;
+    try
+
+      if i_tiezi_index = -1 then
+      begin
+        for I := 0 to TieZi_MaxCount - 1 do
+        begin
+          SaveOnePoint(i_tiezi_index, o_SubmitPlaceEx, 'SubmitPlace');
+        end;
+      end
+      else
+      begin
+        SaveOnePoint(i_tiezi_index, o_SubmitPlaceEx, 'SubmitPlace');
+      end;
+
+
+    finally
+      sldb.Commit;
+    end;
+  finally
+    sldb.Free;
+  end;
+
+
+end;
+
+procedure TFormMain.SaveTieZiList;
+var
+  sysDir : string;
+  logfile: string;
+  mylog: TextFile;
+  inputtext: WideString;
+  i: Integer;
+begin
+  if RzMemo_UrlListLinesCount < 1 then
+    Exit;
+
+  if fileexists(strfileName) then
+    DeleteFile(strfileName);
+
+  for I := 0 to RzMemo_UrlList.Lines.Count - 1 do
+  begin
+    AssignFile(mylog,strfileName);
+    try
+      if fileexists(strfileName) then
+       append(mylog)
+      else
+       rewrite(mylog);
+
+      inputtext := RzMemo_UrlList.Lines.Strings[i];
+      Writeln(mylog,inputtext);                 //写日志里
+    finally
+      CloseFile(mylog);                        //关闭文件流
+    end;
+  end;
+
+
+
+end;
+
+procedure TFormMain.ScrolltoBottom;
+var
+  ScrollPos: integer;
+begin
+  MainForm.ScrollToBottomEXE;
+end;
+
+procedure TFormMain.ScrolltoBottomEXE;
+begin
+  Button12Click(nil);
+end;
+
+procedure TFormMain.Timer1Timer(Sender: TObject);
+var
+  newPoint: TPOINT;
+begin
+  inc(xx, 50);
+  inc(yy, 50);
+
+  newPoint.x := xx;
+  newPoint.y := yy;
+  SetCursorPos(newPoint.x, newPoint.y); //设置目的地位置。
+end;
+
+procedure TFormMain.Timer2Timer(Sender: TObject);
+begin
+  if MainForm.bLoadingResource then
+  begin
+    MainForm.bLoadingResource := False;
+    ShowMessage('开始加载');
+  end;
+end;
+
+procedure TFormMain.Timer_ForDingTieTimer(Sender: TObject);
+begin
+  Action1.Execute;
+end;
+
+procedure TFormMain.Timer_TextCursorChangeTimer(Sender: TObject);
+var
+  CI: TCursorInfo;
+begin
+
+  CI.cbSize := SizeOf(CI);
+  GetCursorInfo(CI);
+  if OldCI <> CI.hCursor then
+  begin
+    OldCI := CI.hCursor;
+//      Beep;
+//      RzMemo1.Lines.Add('用GetCursorInfo发现在坐标 X:'+inttostr(CI.ptScreenPos.X)+' Y:'+inttostr(CI.ptScreenPos.X)+' 发生改变' +
+//      #13#10 + '变为：' +  IntToStr(OldCI));
+  end;
+
+
+//  if OldCIEX<>Screen.Cursor then
+//    begin
+//      OldCIEX:=Screen.Cursor;
+//      Beep;
+//      RzMemo1.Lines.Add('用Screen.Cursor发现在坐标 X:'+inttostr(CI.ptScreenPos.X)+' Y:'+inttostr(CI.ptScreenPos.X)+' 发生改变' +
+//      #13#10 + '变为：' +  IntToStr(OldCIEX));
+//    end;
+
+
+end;
+
+procedure TFormMain.WebBrowser1NewWindow2(ASender: TObject; var ppDisp: IDispatch; var Cancel: WordBool);
+begin
+  Cancel := true;
+end;
+
+end.
+

@@ -1,0 +1,32 @@
+unit UShowMytaobao;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Winapi.ShellAPI, UConstants,
+  Vcl.StdCtrls, RzLabel;
+
+type
+  TForm1 = class(TForm)
+    RzURLLabel1: TRzURLLabel;
+    procedure RzURLLabel1Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  Form1: TForm1;
+
+implementation
+
+{$R *.dfm}
+
+procedure TForm1.RzURLLabel1Click(Sender: TObject);
+begin
+  ShellExecute(Handle, 'open', 'Explorer.exe', TaobaoAddres, nil, SW_SHOWNORMAL);
+end;
+
+end.
